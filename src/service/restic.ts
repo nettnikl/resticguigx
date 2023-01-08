@@ -65,12 +65,6 @@ async function assertResticBinExists() {
 	await FS.chmod(binPath, 0o744)
 }
 
-async function runCommand(args: string[]) {
-	let cmd = `${binPath} ${args.join(' ')}`;
-	let res = await exec(cmd)
-	return res.stdout
-}
-
 export default {
 	test() {
 		return `${os.arch()} - ${os.platform()} - ${os.version()}`

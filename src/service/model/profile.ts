@@ -1,17 +1,12 @@
 import type { StatsResult } from '../types'
 
-type BackupInfo = {
+export type BackupInfo = {
 	path: string
 }
 
-type RepoInfo = {
+export type RepoInfo = {
 	lastBackupStart: string,
 	lastBackupFinished: string
-}
-
-enum PasswordStrategy {
-	"ask",
-	"file"
 }
 
 export default class UserProfile {
@@ -21,11 +16,15 @@ export default class UserProfile {
 	repoStats: Partial<StatsResult> = {}
 	repoInfo: Partial<RepoInfo> = {}
 	backupDirs: BackupInfo[] = []
-	passwordStrategy: PasswordStrategy = PasswordStrategy.file
-
+	passwordStrategy = 'file'
+	storedSecred: string = ''
 
 	constructor(profileName: string) {
 		this.profileName = profileName
+	}
+
+	setStoredSecret(pw: string) {
+		this.storedSecred = pw;
 	}
 
 	toStorage() {

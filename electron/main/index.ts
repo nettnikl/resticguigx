@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, dialog, ipcRenderer } from 'electron'
 import { release } from 'node:os'
 import { join } from 'node:path'
 
@@ -113,4 +113,12 @@ ipcMain.handle('open-win', (_, arg) => {
 	} else {
 		childWindow.loadFile(indexHtml, { hash: arg })
 	}
+})
+
+ipcMain.handle('select-dirs', async (event, arg) => {
+	const result = await dialog.showOpenDialog(win, {
+		properties: ['openDirectory']
+	})
+	console.log('directories selected', result.filePaths)
+	return result;
 })

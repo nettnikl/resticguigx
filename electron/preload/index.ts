@@ -90,3 +90,24 @@ window.onmessage = (ev) => {
 }
 
 setTimeout(removeLoading, 4999)
+
+const { ipcRenderer } = require('electron')
+
+let cmdCb;
+process.once('loaded', () => {
+	window.addEventListener('message', evt => {
+		cmdCb = evt.data.callback
+		if (evt.data.type === 'select-dirs') {
+			ipcRenderer.send('select-dirs')
+		}
+	})
+})
+
+ipcRenderer.on('directory-selected', evt => {
+	if (!cmdCb) {
+		console.log('no callback set');
+		return;
+	}
+	cmdCb(evt)
+	cmdCb = null;
+})

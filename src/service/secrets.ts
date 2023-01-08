@@ -56,7 +56,7 @@ export function registerSecret(secret: string) {
 	let url = `http://127.0.0.1:${serverPort}/?secret=${key}`
 	return {
 		url,
-		command: `curl ${url}`,
+		command: `curl "${url}"`,
 		unregister() {
 			registry.delete(key);
 		}
