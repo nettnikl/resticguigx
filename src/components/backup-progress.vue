@@ -13,24 +13,38 @@ export default defineComponent({
 	data: () => ({
 		progress: {} as Partial<BackupProcess>,
 		summary: {} as Partial<BackupSummary>,
-		error: ''
+		error: '',
+		progressBars: [] as number[],
+		current: 0
 	}),
 
 	computed: {
-		percentage() {
-			if (this.summary.snapshot_id) return 100;
-			return Math.floor((this.progress.percent_done || 0) * 100)
-		}
 	},
 
 	created() {
 		let process = getRunningProcess();
+		process?.processes.forEach(() => {
+			this.progressBars.push(0);
+		});
 		process?.getStdOut()?.on('data', (chk) => {
 			let data = JSON.parse(chk.toString('utf-8'));
 			if (data.message_type === 'summary') {
-				this.summary = data;
+				// console.log('received summary', data);
+				let keys: any = Object.keys(data);
+				let target: any = this.summary;
+				keys.forEach((key: any) => {
+					if (key in target) {
+						target[key] += data[key]
+					} else {
+						target[key] = data[key]
+					}
+				})
+				this.summary = target;
+				this.progressBars[this.current] = 100;
+				this.current += 1;
 			} else if (data.message_type === 'status') {
 				this.progress = data;
+				this.progressBars[this.current] = Math.floor((this.progress.percent_done || 0) * 100)
 			}
 		})
 		process?.getStdErr()?.on('data', (chk) => {
@@ -56,7 +70,9 @@ export default defineComponent({
 		<template #header>Backup in Progress</template>
 		<el-alert :title="error" type="error" v-if="error" />
 		<el-progress
-			:percentage="percentage"
+			v-for="(p, i) of progressBars"
+			:key="i"
+			:percentage="p"
 		/>
 		<el-descriptions
 			title="Summary"

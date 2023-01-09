@@ -5,6 +5,7 @@ import util from 'node:util';
 import Path from 'node:path'
 import UserProfile, { BackupInfo } from './model/profile';
 import Process from './model/process';
+import BatchProcess from './model/batch-process'
 const exec = util.promisify(child_process.exec);
 const binPath = Path.join(process.cwd(), 'data', 'bin', 'restic');
 
@@ -44,12 +45,12 @@ export async function stats(repoDir: string, password: string): Promise<StatsRes
 	return JSON.parse(res)
 }
 
-let runningProcess: Process|null = null;
+let runningProcess: BatchProcess|null = null;
 
 export function hasRunningProcess(): boolean {
 	return !!runningProcess;
 }
-export function getRunningProcess() {
+export function getRunningProcess(): BatchProcess|null {
 	return runningProcess
 }
 
@@ -76,31 +77,38 @@ export type BackupProcess = {
 	"total_bytes": number
 }
 
-export async function backup(profile: UserProfile, paths: BackupInfo[]): Promise<Process> {
+export async function backup(profile: UserProfile, paths: BackupInfo[]): Promise<BatchProcess> {
 	if (runningProcess) throw new Error('a restic process is already running')
 	// await Secrets.start();
-	let secret = Secrets.registerSecret(profile.storedSecred);
-	let path = paths[0].path
-	let process = new Process(binPath, [
-		'--json',
-		'backup',
-		'--exclude-caches',
-		`--tag="${path}"`,
-		`-r=${profile.repoPath}`,
-		`${path}`
-	], {
-		RESTIC_PASSWORD: profile.storedSecred
-	})
-	process.start();
-	// setTimeout(() => {
+	// let secret = Secrets.registerSecret(profile.storedSecred);
+	if (paths.length === 0) throw new Error('no paths specified')
+	let processes: Process[] = [];
+	for (let info of paths) {
+		let process = new Process(binPath, [
+			'--json',
+			'backup',
+			'--exclude-caches',
+			`--tag="${info.path}"`,
+			`-r=${profile.repoPath}`,
+			`${info.path}`
+		], {
+			RESTIC_PASSWORD: profile.storedSecred
+		})
+		processes.push(process);
+	}
+	let batch = new BatchProcess(processes);
+	batch.start();
+	// setTimeout(() => {s
 	// 	secret.unregister()
 	// }, 2000)
-	runningProcess = process;
-	process.process!.on('exit', () => {
+	runningProcess = batch;
+	batch.waitForFinish().then(() => {
 		runningProcess = null;
-	});
-	return process;
+	})
+	return batch;
 }
+
+
 
 export async function forget() {
 

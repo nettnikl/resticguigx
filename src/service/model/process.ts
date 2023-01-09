@@ -26,7 +26,7 @@ export default class Process {
 				...this.env
 			}
 		})
-		console.log(this.cmd, this.args, this.env, this.process)
+		// console.log('starting', this.cmd, this.args, this.env, this.process)
 		this.promise = new Promise((resolve, reject) => {
 			this.process!.once('exit', (code) => {
 				if (code) reject(new Error('exit code: '+code))
