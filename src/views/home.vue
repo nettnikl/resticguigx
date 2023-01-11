@@ -22,6 +22,7 @@ export default defineComponent({
 </script>
 
 <template>
-	<h1>Profile List</h1>
+	<h1>Restic Backup</h1>
+	<h2>Select a Profile</h2>
 	<profile-list-vue @select="onSelect" />
 </template>

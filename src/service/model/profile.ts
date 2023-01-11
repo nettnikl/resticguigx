@@ -1,12 +1,22 @@
 import type { StatsResult } from '../types'
 
 export type BackupInfo = {
-	path: string
+	path: string,
+	lastBackupStart?: string,
+	lastBackupFinished?: string,
 }
 
 export type RepoInfo = {
-	lastBackupStart: string,
-	lastBackupFinished: string
+	lastStatsUpdate: string,
+	lastCleanup: string
+}
+
+export type PruneSettings = {
+	keepLast: number,
+	keepHourly: number,
+	keepDaily: number,
+	keepWeekly: number,
+	keepMonthly: number
 }
 
 export default class UserProfile {
@@ -16,6 +26,7 @@ export default class UserProfile {
 	repoStats: Partial<StatsResult> = {}
 	repoInfo: Partial<RepoInfo> = {}
 	backupDirs: BackupInfo[] = []
+	pruneSettings: Partial<PruneSettings> = {}
 	passwordStrategy = 'file'
 	storedSecred: string = ''
 

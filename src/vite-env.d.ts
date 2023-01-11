@@ -5,3 +5,14 @@ declare module '*.vue' {
 	const component: DefineComponent<{}, {}, any>
 	export default component
 }
+
+export {}
+
+declare module 'vue' {
+	interface ComponentCustomProperties {
+		$filters: {
+			dateTime(value: string): string
+		}
+	}
+}
+

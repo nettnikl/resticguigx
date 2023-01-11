@@ -25,5 +25,6 @@ export default defineComponent({
 </script>
 
 <template>
+	<h2>Profile {{ profileName }}</h2>
 	<profile-overview-vue v-if="profileName" :profile-name="profileName" />
 </template>
