@@ -41,6 +41,9 @@ export default defineComponent({
 				if (model.passwordStrategy === 'profile') {
 					model.setStoredSecret( this.password )
 				}
+				model.pruneSettings = {
+					keepMonthly: 6
+				}
 				await saveProfile(model)
 				this.$emit('created', this.newName);
 				this.newName = '';

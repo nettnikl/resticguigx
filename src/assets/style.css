@@ -95,3 +95,7 @@ code {
 		background-color: #f9f9f9;
 	}
 }
+
+#app {
+	--el-color-primary: #2529a7;
+}

@@ -11,7 +11,7 @@ export {}
 declare module 'vue' {
 	interface ComponentCustomProperties {
 		$filters: {
-			dateTime(value: string): string
+			dateTime(value?: string): string
 		}
 	}
 }

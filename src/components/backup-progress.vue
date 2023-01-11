@@ -14,7 +14,7 @@ export default defineComponent({
 		progress: {} as Partial<BackupProcess>,
 		summary: {} as Partial<BackupSummary>,
 		error: '',
-		progressBars: [] as number[],
+		progressBars: [] as { path: string, percent: number }[],
 		current: 0
 	}),
 
@@ -23,11 +23,21 @@ export default defineComponent({
 
 	created() {
 		let process = getRunningProcess();
-		process?.processes.forEach(() => {
-			this.progressBars.push(0);
+		process?.processes.forEach((p) => {
+			this.progressBars.push({
+				path: p.info.path,
+				percent: 0
+			});
 		});
 		process?.getStdOut()?.on('data', (chk) => {
-			let data = JSON.parse(chk.toString('utf-8'));
+			let str = chk.toString('utf-8');
+			let data: any;
+			try {
+				data = JSON.parse(str);
+			} catch (e) {
+				this.error += str;
+				return;
+			}
 			if (data.message_type === 'summary') {
 				// console.log('received summary', data);
 				let keys: any = Object.keys(data);
@@ -40,11 +50,11 @@ export default defineComponent({
 					}
 				})
 				this.summary = target;
-				this.progressBars[this.current] = 100;
+				this.progressBars[this.current].percent = 100;
 				this.current += 1;
 			} else if (data.message_type === 'status') {
 				this.progress = data;
-				this.progressBars[this.current] = Math.floor((this.progress.percent_done || 0) * 100)
+				this.progressBars[this.current].percent = Math.floor((this.progress.percent_done || 0) * 100)
 			}
 		})
 		process?.getStdErr()?.on('data', (chk) => {
@@ -70,10 +80,16 @@ export default defineComponent({
 		<template #header>Backup in Progress</template>
 		<el-alert :title="error" type="error" v-if="error" />
 		<el-progress
-			v-for="(p, i) of progressBars"
-			:key="i"
-			:percentage="p"
-		/>
+			v-for="(p) of progressBars"
+			:key="p.path"
+			:text-inside="true"
+			:percentage="p.percent"
+			type="line"
+			:stroke-width="20"
+			style="margin-bottom: 10px"
+		>
+			{{ p.path }}: {{ p.percent }}%
+		</el-progress>
 		<el-descriptions
 			title="Summary"
 			v-show="!!summary.snapshot_id"

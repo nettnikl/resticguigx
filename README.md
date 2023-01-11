@@ -11,13 +11,15 @@ Restic + Vue3 + Electron
 
 ## Roadmap ##
 
-- preview and execute prune
+
 
 ## dev ##
 
-- populate and shot repoInfo dates
+
+- forget should remove path from repo
 - allow to cancel backup process
-- forget and prune settings
+- restore
+- mount
 
 - encrypted profile
 - ask for password strat

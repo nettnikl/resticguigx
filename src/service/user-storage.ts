@@ -8,7 +8,7 @@ const MainDirName = process.env.NODE_ENV === 'development' ? 'ResticGuiDev' : 'R
 // source: https://stackoverflow.com/questions/19275776/node-js-how-to-get-the-os-platforms-user-data-folder
 const storageBaseDir = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share")
 const storageDir = Path.join(storageBaseDir, MainDirName)
-console.log(userinfo, process.env);
+// console.log(userinfo, process.env);
 const ProfileFile = 'profile.json';
 
 function getProfilePath(profileName: string): string {

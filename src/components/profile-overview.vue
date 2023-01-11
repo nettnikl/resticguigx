@@ -48,43 +48,47 @@ export default defineComponent({
 	},
 
 	methods: {
-		async runBackup(info: BackupInfo) {
+		async runBackup(info?: BackupInfo) {
 			this.working = true;
+			let acc = this.accordion;
+			this.accordion = '';
 			try {
 				this.showProgress = false;
-				let process = await Repo.backup(this.data, [info]);
+				let targets = info ? [info] : this.data.backupDirs
+				targets.forEach(info => {
+					info.lastBackupStart = new Date().toJSON()
+				})
+				let process = await Repo.backup(this.data, targets);
 				this.showProgress = true;
-				
-				await process.waitForFinish();
-				let stats = await Repo.stats(this.data.repoPath, this.data.storedSecred)
-				this.data.repoStats = stats;
-				await this.saveProfile();
+				try {
+					await process.waitForFinish();
+					ElMessage({
+						message: 'backup has completed without errors',
+						type: 'success'
+					})
+					if (!info) {
+						this.data.repoInfo.lastFullBackup = new Date().toJSON()
+					}
+				} finally {
+					let stats = await Repo.stats(this.data.repoPath, this.data.storedSecred)
+					this.data.repoStats = stats;
+					await this.saveProfile();
+				}
 			} catch (e: any) {
+				ElMessage({
+					message: 'error during backup',
+					type: 'error'
+				})
 				this.error = e.message;
 				console.error(e);
 			}
 			this.working = false;
+			this.accordion = acc;
 		},
 		async added(path: string) {
 			this.data.backupDirs.push({ path })
 			await this.saveProfile();
-		},
-		async backupAll() {
-			this.working = true;
-			try {
-				this.showProgress = false;
-				let process = await Repo.backup(this.data, this.data.backupDirs);
-				this.showProgress = true;
-				
-				await process.waitForFinish();
-				let stats = await Repo.stats(this.data.repoPath, this.data.storedSecred)
-				this.data.repoStats = stats;
-				await this.saveProfile();
-			} catch (e: any) {
-				this.error = e.message;
-				console.error(e);
-			}
-			this.working = false;
+			this.accordion = 'paths';
 		},
 		async pruneRepository() {
 			this.working = true;
@@ -121,10 +125,29 @@ export default defineComponent({
 			}
 		},
 		async removePath(info: BackupInfo) {
-			let idx = this.data.backupDirs.findIndex(e => e === info);
-			this.data.backupDirs.splice(idx, 1);
-			await this.saveProfile();
-			// @TODO await Repo.forgetByTag(info.path)
+			this.working = true;
+			try {
+				let res = await Repo.forget(this.data, { keepLast: 1 }, false, [info]);
+				if (res.length) {
+					let lastSnapshotId = res[0].keep[0].id;
+					await Repo.forget(this.data, {}, false, [], lastSnapshotId)
+					ElMessage({
+						message: 'path deleted from repository',
+						type: 'success'
+					})
+				} else {
+					throw new Error('cannot forget last snapshot');
+				}
+				let stats = await Repo.stats(this.data.repoPath, this.data.storedSecred)
+				this.data.repoStats = stats;
+				let idx = this.data.backupDirs.findIndex(e => e === info);
+				this.data.backupDirs.splice(idx, 1);
+				await this.saveProfile();
+			} catch (e: any) {
+				this.error = e.message;
+				console.error(e);
+			}
+			this.working = false;
 		},
 		filesize(n: number) {
 			return filesize(n)
@@ -138,12 +161,27 @@ export default defineComponent({
 			})
 			this.accordion = '';
 		},
-		async runPrune() {
+		async runPrune(info?: BackupInfo) {
 			this.working = true;
 			try {
-				let res = await Repo.forget(this.data, this.data.pruneSettings, false)
+				let targets = info ? [info] : this.data.backupDirs
+				let res = await Repo.forget(this.data, this.data.pruneSettings, false, targets)
 				console.log('prune complete', res);
-				this.data.repoInfo.lastCleanup = new Date().toJSON()
+				targets.forEach(t => {
+					t.lastCleanup = new Date().toJSON()
+				})
+				let kept = 0;
+				let removed = 0;
+				res.forEach(row => {
+					kept += row.keep.length
+					removed += row.remove ? row.remove.length : 0
+				})
+				ElMessage({
+					message: 'Cleanup complete. Kept: '+kept+', cleaned: '+removed+' over '+targets.length+' path(s)',
+					type: 'success'
+				})
+				let stats = await Repo.stats(this.data.repoPath, this.data.storedSecred)
+				this.data.repoStats = stats;
 				await this.saveProfile();
 			} catch (e: any) {
 				this.error = e.message;
@@ -169,20 +207,21 @@ export default defineComponent({
 		<el-descriptions-item label="Total File Count">{{ data.repoStats.total_file_count }}</el-descriptions-item>
 		<el-descriptions-item label="Snapshot Count">{{ data.repoStats.snapshots_count }}</el-descriptions-item>
 		<el-descriptions-item label="File Size">{{ filesize(data.repoStats.total_size || 0) }}</el-descriptions-item>
-		<el-descriptions-item label="Last Cleanup">{{ data.repoInfo.lastCleanup ? $filters.dateTime(data.repoInfo.lastCleanup) : '-' }}</el-descriptions-item>
+		<el-descriptions-item label="Last full Backup">{{ $filters.dateTime(data.repoInfo.lastFullBackup) || 'never' }}</el-descriptions-item>
 	</el-descriptions>
 	
 	<el-alert type="error" v-show="error.length > 0" :title="error" />
 	
 	<backup-progress-vue v-if="showProgress" />
-	<el-button @click="showProgress = false" v-show="showProgress && !working">Close</el-button>
 
-	<el-button-group>
-		<el-button disabled plain>Actions</el-button>
-		<el-button @click="backupAll" :disabled="working">Run full Backup</el-button>
-		<el-button @click="updateStats" :disabled="working">Update Statistics</el-button>
-		<el-button @click="runPrune" :disabled="working">Cleanup Repo</el-button>
-	</el-button-group>
+	<div style="margin: 16px 0">
+		<el-button-group>
+			<el-button @click="showProgress = false" v-if="showProgress && !working">Close Progress</el-button>
+			<el-button @click="() => runBackup()" :disabled="working">Run full Backup</el-button>
+			<el-button @click="updateStats" :disabled="working">Update Statistics</el-button>
+			<el-button @click="() => runPrune()" :disabled="working">Cleanup Repo</el-button>
+		</el-button-group>
+	</div>
 
 	
 
@@ -196,7 +235,13 @@ export default defineComponent({
 				<template #header>
 					Path: {{ info.path }}
 				</template>
+				<el-descriptions>
+					<el-descriptions-item label="Last Backup Started">{{ $filters.dateTime(info.lastBackupStart) || 'never' }}</el-descriptions-item>
+					<el-descriptions-item label="Last Backup Completed">{{ $filters.dateTime(info.lastBackupFinished) || 'never' }}</el-descriptions-item>
+					<el-descriptions-item label="Last Cleaned">{{ $filters.dateTime(info.lastCleanup) || 'never' }}</el-descriptions-item>
+				</el-descriptions>
 				<el-button @click="runBackup(info)">Backup</el-button>
+				<el-button @click="runPrune(info)">Cleanup</el-button>
 				<el-button @click="removePath(info)">Remove</el-button>
 			</el-card>
 		</el-collapse-item>

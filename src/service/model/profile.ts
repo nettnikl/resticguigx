@@ -4,11 +4,12 @@ export type BackupInfo = {
 	path: string,
 	lastBackupStart?: string,
 	lastBackupFinished?: string,
+	lastCleanup?: string
 }
 
 export type RepoInfo = {
 	lastStatsUpdate: string,
-	lastCleanup: string
+	lastFullBackup: string
 }
 
 export type PruneSettings = {
