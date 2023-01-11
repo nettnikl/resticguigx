@@ -10,10 +10,6 @@ export default defineComponent({
 		profileNewVue
 	},
 
-	props: {
-		
-	},
-
 	emits: ['select'],
 
 	data: () => ({

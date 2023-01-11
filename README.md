@@ -15,11 +15,18 @@ Restic + Vue3 + Electron
 
 ## dev ##
 
+### setup
+
+download latest restic release and place in ./bin/linux/restic
+for packaging, download mac and win versions to ./bin/mac/restic and ./bin/win/restic.exe
+
+### todo
 
 - forget should remove path from repo
 - allow to cancel backup process
 - restore
 - mount
+- on first add existing repo, parse snapshots to add folders
 
 - encrypted profile
 - ask for password strat

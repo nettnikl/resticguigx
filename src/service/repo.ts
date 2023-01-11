@@ -4,7 +4,10 @@ import Path from 'node:path'
 import UserProfile, { BackupInfo, PruneSettings } from './model/profile';
 import Process from './model/process';
 import BatchProcess from './model/batch-process'
-const binPath = Path.join(process.cwd(), 'data', 'bin', 'restic');
+import os from 'node:os';
+const binPath = process.env.NODE_ENV === 'development' 
+	? Path.join(process.cwd(), 'bin', 'linux', 'restic') 
+	: Path.join(process.resourcesPath!, 'bin', os.platform() === 'win32' ? 'restic.exe' : 'restic');
 
 type Output = { stdout: string, stderr: string }
 
@@ -28,6 +31,15 @@ function exec(args: string[], env: Record<string, string>): Promise<Output> {
 	})
 }
 
+export async function assertRepoExists(repoDir: string, password: string) {
+	try {
+		await stats(repoDir, password);
+	} catch (e) {
+		console.log('error in stats', e);
+		await initRepo(repoDir, password);
+	}
+}
+
 export async function initRepo(repoDir: string, password: string) {
 	let res = await exec([
 		'init',
@@ -36,6 +48,7 @@ export async function initRepo(repoDir: string, password: string) {
 	], {
 		RESTIC_PASSWORD: password
 	})
+	return res.stdout;
 }
 
 export async function stats(repoDir: string, password: string): Promise<StatsResult> {

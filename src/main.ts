@@ -10,6 +10,7 @@ import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import setup from './service/global-props'
+import * as Repo from './service/repo';
 
 const app = createApp(App)
 	
@@ -27,3 +28,10 @@ app.mount('#app')
 		postMessage({ payload: 'removeLoading' }, '*')
 	})
 
+console.log('app loaded', app);
+
+Repo.stats('/home/ineluki/Codez/int/restic-ui3/data/repo', 'test').then(res => {
+	console.log('res', res)
+}).catch(err => {
+	console.error(err)
+})

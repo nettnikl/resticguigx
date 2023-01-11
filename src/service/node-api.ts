@@ -1,19 +1,18 @@
-// import { lstat } from 'node:fs/promises'
-// import { cwd } from 'node:process'
 import { ipcRenderer } from 'electron'
 
 ipcRenderer.on('main-process-message', (_event, ...args) => {
 	console.log('[Receive Main-process message]:', ...args)
 })
 
-// lstat(cwd()).then(stats => {
-// 	console.log('[fs.lstat]', stats)
-// }).catch(err => {
-// 	console.error(err)
-// })
-
 export async function selectDirectory() {
 	let result = await ipcRenderer.invoke('select-dirs')
 	return result;
 }
 
+let storageDir = ''
+export async function getStorageDir(): Promise<string> {
+	if (!storageDir) {
+		storageDir = await ipcRenderer.invoke('read-user-data')
+	}
+	return storageDir
+}

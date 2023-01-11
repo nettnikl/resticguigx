@@ -122,3 +122,7 @@ ipcMain.handle('select-dirs', async (event, arg) => {
 	console.log('directories selected', result.filePaths)
 	return result;
 })
+
+ipcMain.handle('read-user-data', async (event, fileName) => {
+	return join(app.getPath('userData'), 'profiles');
+})

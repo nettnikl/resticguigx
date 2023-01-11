@@ -15,6 +15,7 @@ release
 *.local
 
 /data
+/bin
 
 # Editor directories and files
 .vscode/.debug.env

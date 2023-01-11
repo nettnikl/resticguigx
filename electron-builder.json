@@ -1,0 +1,61 @@
+{
+	"appId": "link.cryptic.resticgui",
+	"asar": true,
+	"directories": {
+		"output": "release/${version}"
+	},
+	"files": [
+		"dist-electron",
+		"dist"
+	],
+	"linux": {
+		"target": [
+			"AppImage"
+		],
+		"category": "Utility",
+		"extraResources": [
+			{
+				"from": "bin/linux/restic",
+				"to": "bin/restic"
+			}
+		]
+	},
+	"mac": {
+		"artifactName": "${productName}_${version}.${ext}",
+		"target": [
+			"zip"
+		],
+		"extraResources": [
+			{
+				"from": "bin/mac/restic",
+				"to": "bin/restic"
+			}
+		]
+	},
+	"win": {
+		"target": [
+			{
+				"target": "nsis",
+				"arch": [
+					"x64"
+				]
+			}
+		],
+		"artifactName": "${productName}_${version}.${ext}",
+		"extraResources": [
+			{
+				"from": "bin/win/restic",
+				"to": "bin/restic.exe"
+			}
+		]
+	},
+	"nsis": {
+		"oneClick": false,
+		"perMachine": false,
+		"allowToChangeInstallationDirectory": true,
+		"deleteAppDataOnUninstall": false
+	},
+	"asarUnpack": [
+		"bin/**"
+	]
+}

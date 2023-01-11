@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { initRepo } from '../service/repo';
+import * as Repo from '../service/repo';
 import { createProfile, saveProfile } from '../service/user-storage'
 import { selectDirectory } from '../service/node-api'
 
@@ -34,7 +34,7 @@ export default defineComponent({
 				if (this.repoType === 'local') {
 					repoDir = this.repoSelect;
 				}
-				await initRepo(repoDir, this.password);
+				await Repo.assertRepoExists(repoDir, this.password);
 				let model = await createProfile(this.newName);
 				model.repoPath = repoDir;
 				model.passwordStrategy = this.passStrat;
