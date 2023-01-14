@@ -1,4 +1,7 @@
 import type { StatsResult } from '../types'
+import { pathIsDirectory } from '../node-api'
+import type { Snapshot } from '../repo'
+import os from 'node:os'
 
 export type BackupInfo = {
 	path: string,
@@ -22,21 +25,40 @@ export type PruneSettings = {
 
 export default class UserProfile {
 
+	static PW_STRAT_PROFILE = 'profile'
+	static PW_STRAT_ASK = 'ask'
+
 	profileName: string
 	repoPath: string = ''
 	repoStats: Partial<StatsResult> = {}
 	repoInfo: Partial<RepoInfo> = {}
 	backupDirs: BackupInfo[] = []
 	pruneSettings: Partial<PruneSettings> = {}
-	passwordStrategy = 'file'
-	storedSecred: string = ''
+	passwordStrategy = UserProfile.PW_STRAT_PROFILE
+	storedSecret: string = ''
+	_tempSecret: string = ''
 
 	constructor(profileName: string) {
 		this.profileName = profileName
 	}
 
-	setStoredSecret(pw: string) {
-		this.storedSecred = pw;
+	setSecret(pw: string) {
+		if (this.passwordStrategy === UserProfile.PW_STRAT_PROFILE) {
+			this.storedSecret = pw;
+		} else {
+			this._tempSecret = pw;
+		}
+	}
+
+	getSecret(): string {
+		if (this._tempSecret) return this._tempSecret;
+		if (this.storedSecret) return this.storedSecret;
+		throw new Error('no password found')
+	}
+
+	hasSecret(): boolean {
+		if (this._tempSecret || this.storedSecret) return true;
+		return false;
 	}
 
 	toStorage() {
@@ -50,6 +72,26 @@ export default class UserProfile {
 				this[key] = data[key]
 			}
 		})
+	}
+
+	async setPathsFromSnapshots(snapshots: Snapshot[]) {
+		let myhost = os.hostname()
+		let snaps = snapshots.filter(e => e.hostname === myhost);
+		let paths = new Set<string>(snaps.flatMap(e => e.paths));
+		for (let p of paths) {
+			let isDir = await pathIsDirectory(p);
+			if (!isDir) continue;
+			let lastStamp = snapshots.reduce((c, v) => {
+				if (v.paths.includes(p) && v.time > c) return v.time;
+				else return c;
+			}, '')
+			let exists = this.backupDirs.find(e => e.path === p);
+			if (exists) {
+				exists.lastBackupFinished = lastStamp
+			} else {
+				this.backupDirs.push({ path: p, lastBackupFinished: lastStamp })
+			}
+		}
 	}
 
 }

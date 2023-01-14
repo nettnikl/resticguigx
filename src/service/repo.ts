@@ -36,19 +36,11 @@ function exec(args: string[], env: Record<string, string>): Promise<Output> {
 
 export async function assertRepoExists(repoDir: string, password: string): Promise<Snapshot[]> {
 	try {
-		return getSnapshots(repoDir, password);
+		let res = await getSnapshots(repoDir, password);
+		return res;
 	} catch (e) {
 		await initRepo(repoDir, password);
 		return []
-	}
-}
-
-export async function pathIsDirectory(path: string): Promise<boolean> {
-	try {
-		let stat = await fs.stat(path);
-		return stat.isDirectory()
-	} catch (e) {
-		return false;
 	}
 }
 
@@ -120,7 +112,7 @@ export async function backup(profile: UserProfile, paths: BackupInfo[]): Promise
 			`-r=${profile.repoPath}`,
 			`${info.path}`
 		], {
-			RESTIC_PASSWORD: profile.storedSecred
+			RESTIC_PASSWORD: profile.getSecret()
 		}, info)
 		processes.push(process);
 	}
@@ -133,7 +125,7 @@ export async function backup(profile: UserProfile, paths: BackupInfo[]): Promise
 	return batch;
 }
 
-type Snapshot = {
+export type Snapshot = {
 	time: string,
 	parent?: string,
 	tree: string,
@@ -188,7 +180,7 @@ export async function forget(profile: UserProfile, settings: Partial<PruneSettin
 	}
 	console.log(params, keep);
 	let res = await exec(params, {
-		RESTIC_PASSWORD: profile.storedSecred
+		RESTIC_PASSWORD: profile.getSecret()
 	});
 	console.log('forget output', res);
 	if (!res.stdout) {
@@ -233,7 +225,7 @@ export async function mount(profile: UserProfile, path: string): Promise<Process
 			`-r=${profile.repoPath}`,
 			mountBasePath
 		], {
-			RESTIC_PASSWORD: profile.storedSecred
+			RESTIC_PASSWORD: profile.getSecret()
 		}, { path });
 		currentMount = process;
 		process.start();
@@ -269,7 +261,7 @@ export async function restore(profile: UserProfile, path: string, targetPath: st
 		'latest'
 	]
 	let process = new Process(binPath, params, {
-		RESTIC_PASSWORD: profile.storedSecred
+		RESTIC_PASSWORD: profile.getSecret()
 	}, { path })
 	process.start();
 

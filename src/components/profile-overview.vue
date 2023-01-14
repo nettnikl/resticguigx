@@ -22,16 +22,13 @@ export default defineComponent({
 	},
 
 	props: {
-		profileName: {
-			type: String,
+		profile: {
+			type: UserProfile,
 			required: true
 		}
 	},
 
 	data: () => ({
-		data: new UserProfile(''),
-		loaded: false,
-		newName: '',
 		working: false,
 		error: '',
 		accordion: '',
@@ -41,12 +38,16 @@ export default defineComponent({
 	computed: {
 		canPrune() {
 
+		},
+		hasFolders() {
+			return this.profile.backupDirs.length > 0;
 		}
 	},
 
 	async created() {
-		this.data = await loadProfile(this.profileName)
-		this.loaded = true;
+		if (this.profile.backupDirs.length === 0) {
+			this.accordion = 'newPath';
+		}
 	},
 
 	methods: {
@@ -56,11 +57,11 @@ export default defineComponent({
 			this.accordion = '';
 			try {
 				this.showProgress = false;
-				let targets = info ? [info] : this.data.backupDirs
+				let targets = info ? [info] : this.profile.backupDirs
 				targets.forEach(info => {
 					info.lastBackupStart = new Date().toJSON()
 				})
-				let process = await Repo.backup(this.data, targets);
+				let process = await Repo.backup(this.profile, targets);
 				this.showProgress = true;
 				try {
 					await process.waitForFinish();
@@ -69,11 +70,11 @@ export default defineComponent({
 						type: 'success'
 					})
 					if (!info) {
-						this.data.repoInfo.lastFullBackup = new Date().toJSON()
+						this.profile.repoInfo.lastFullBackup = new Date().toJSON()
 					}
 				} finally {
-					let stats = await Repo.stats(this.data.repoPath, this.data.storedSecred)
-					this.data.repoStats = stats;
+					let stats = await Repo.stats(this.profile.repoPath, this.profile.getSecret())
+					this.profile.repoStats = stats;
 					await this.saveProfile();
 				}
 			} catch (e: any) {
@@ -88,7 +89,7 @@ export default defineComponent({
 			this.accordion = acc;
 		},
 		async added(path: string) {
-			this.data.backupDirs.push({ path })
+			this.profile.backupDirs.push({ path })
 			await this.saveProfile();
 			this.accordion = 'paths';
 		},
@@ -96,8 +97,8 @@ export default defineComponent({
 			this.working = true;
 			try {
 				
-				let stats = await Repo.stats(this.data.repoPath, this.data.storedSecred)
-				this.data.repoStats = stats;
+				let stats = await Repo.stats(this.profile.repoPath, this.profile.getSecret())
+				this.profile.repoStats = stats;
 				await this.saveProfile();
 			} catch (e: any) {
 				this.error = e.message;
@@ -108,8 +109,8 @@ export default defineComponent({
 		async updateStats() {
 			this.working = true;
 			try {
-				let stats = await Repo.stats(this.data.repoPath, this.data.storedSecred)
-				this.data.repoStats = stats;
+				let stats = await Repo.stats(this.profile.repoPath, this.profile.getSecret())
+				this.profile.repoStats = stats;
 				await this.saveProfile();
 			} catch (e: any) {
 				this.error = e.message;
@@ -120,7 +121,7 @@ export default defineComponent({
 		},
 		async saveProfile() {
 			try {
-				await saveProfile(this.data)
+				await saveProfile(this.profile)
 			} catch (e: any) {
 				this.error = e.message;
 				console.error(e);
@@ -129,10 +130,10 @@ export default defineComponent({
 		async removePath(info: BackupInfo) {
 			this.working = true;
 			try {
-				let res = await Repo.forget(this.data, { keepLast: 1 }, false, [info]);
+				let res = await Repo.forget(this.profile, { keepLast: 1 }, false, [info]);
 				if (res.length) {
 					let lastSnapshotId = res[0].keep[0].id;
-					await Repo.forget(this.data, {}, false, [], lastSnapshotId)
+					await Repo.forget(this.profile, {}, false, [], lastSnapshotId)
 					ElMessage({
 						message: 'path deleted from repository',
 						type: 'success'
@@ -140,10 +141,10 @@ export default defineComponent({
 				} else {
 					throw new Error('cannot forget last snapshot');
 				}
-				let stats = await Repo.stats(this.data.repoPath, this.data.storedSecred)
-				this.data.repoStats = stats;
-				let idx = this.data.backupDirs.findIndex(e => e === info);
-				this.data.backupDirs.splice(idx, 1);
+				let stats = await Repo.stats(this.profile.repoPath, this.profile.getSecret())
+				this.profile.repoStats = stats;
+				let idx = this.profile.backupDirs.findIndex(e => e === info);
+				this.profile.backupDirs.splice(idx, 1);
 				await this.saveProfile();
 			} catch (e: any) {
 				this.error = e.message;
@@ -155,7 +156,7 @@ export default defineComponent({
 			return filesize(n)
 		},
 		async updatePruneSettings(s: PruneSettings) {
-			this.data.pruneSettings = s;
+			this.profile.pruneSettings = s;
 			await this.saveProfile();
 			ElMessage({
 				message: 'Settings have been saved',
@@ -166,8 +167,8 @@ export default defineComponent({
 		async runPrune(info?: BackupInfo) {
 			this.working = true;
 			try {
-				let targets = info ? [info] : this.data.backupDirs
-				let res = await Repo.forget(this.data, this.data.pruneSettings, false, targets)
+				let targets = info ? [info] : this.profile.backupDirs
+				let res = await Repo.forget(this.profile, this.profile.pruneSettings, false, targets)
 				console.log('prune complete', res);
 				targets.forEach(t => {
 					t.lastCleanup = new Date().toJSON()
@@ -182,17 +183,14 @@ export default defineComponent({
 					message: 'Cleanup complete. Kept: '+kept+', cleaned: '+removed+' over '+targets.length+' path(s)',
 					type: 'success'
 				})
-				let stats = await Repo.stats(this.data.repoPath, this.data.storedSecred)
-				this.data.repoStats = stats;
+				let stats = await Repo.stats(this.profile.repoPath, this.profile.getSecret())
+				this.profile.repoStats = stats;
 				await this.saveProfile();
 			} catch (e: any) {
 				this.error = e.message;
 				console.error(e);
 			}
 			this.working = false;
-		},
-		async runMount(info: BackupInfo) {
-			
 		}
 	}
 
@@ -201,28 +199,27 @@ export default defineComponent({
 </script>
 
 <template>
-	<RouterLink to="/">Back</RouterLink>
 	<el-descriptions 
 		title="Info" 
 		border
 		:column="4"
 		direction="vertical"
 	>
-		<el-descriptions-item label="Repository">{{ data.repoPath }}</el-descriptions-item>
-		<el-descriptions-item label="Total File Count">{{ data.repoStats.total_file_count }}</el-descriptions-item>
-		<el-descriptions-item label="Snapshot Count">{{ data.repoStats.snapshots_count }}</el-descriptions-item>
-		<el-descriptions-item label="File Size">{{ filesize(data.repoStats.total_size || 0) }}</el-descriptions-item>
-		<el-descriptions-item label="Last full Backup">{{ $filters.dateTime(data.repoInfo.lastFullBackup) || 'never' }}</el-descriptions-item>
+		<el-descriptions-item label="Repository">{{ profile.repoPath }}</el-descriptions-item>
+		<el-descriptions-item label="Total File Count">{{ profile.repoStats.total_file_count }}</el-descriptions-item>
+		<el-descriptions-item label="Snapshot Count">{{ profile.repoStats.snapshots_count }}</el-descriptions-item>
+		<el-descriptions-item label="File Size">{{ filesize(profile.repoStats.total_size || 0) }}</el-descriptions-item>
+		<el-descriptions-item label="Last full Backup">{{ $filters.dateTime(profile.repoInfo.lastFullBackup) || 'never' }}</el-descriptions-item>
 	</el-descriptions>
 	
 	<el-alert type="error" v-show="error.length > 0" :title="error" />
 	
 	<backup-progress-vue v-if="showProgress" />
 
-	<div style="margin: 16px 0">
+	<div style="margin: 16px 0" v-show="hasFolders">
 		<el-button-group>
 			<el-button @click="showProgress = false" v-if="showProgress && !working">Close Progress</el-button>
-			<el-button @click="() => runBackup()" :disabled="working">Run full Backup</el-button>
+			<el-button @click="() => runBackup()" :disabled="working" type="primary">Run full Backup</el-button>
 			<el-button @click="updateStats" :disabled="working">Update Statistics</el-button>
 			<el-button @click="() => runPrune()" :disabled="working">Cleanup Repo</el-button>
 		</el-button-group>
@@ -230,35 +227,52 @@ export default defineComponent({
 
 	
 
-	<el-collapse accordion v-model="accordion" v-if="loaded" v-loading="working">
-		<el-collapse-item title="Paths" name="paths">
+	<el-collapse accordion v-model="accordion" v-loading="working">
+		<el-collapse-item 
+			title="Folders"
+			name="paths"
+			v-show="hasFolders"
+		>
 			<el-card
-				v-for="info of data.backupDirs"
+				v-for="info of profile.backupDirs"
 				:key="info.path"
 				shadow="never"
+				style="text-align: left; margin-bottom: 8px"
 			>
 				<template #header>
-					Path: {{ info.path }}
+					<pre>{{ info.path }}</pre>
 				</template>
-				<el-descriptions>
+				<el-descriptions
+					direction="vertical"
+					size="small"
+				>
 					<el-descriptions-item label="Last Backup Started">{{ $filters.dateTime(info.lastBackupStart) || 'never' }}</el-descriptions-item>
 					<el-descriptions-item label="Last Backup Completed">{{ $filters.dateTime(info.lastBackupFinished) || 'never' }}</el-descriptions-item>
 					<el-descriptions-item label="Last Cleaned">{{ $filters.dateTime(info.lastCleanup) || 'never' }}</el-descriptions-item>
 				</el-descriptions>
 				<el-button @click="runBackup(info)">Backup</el-button>
 				<el-button @click="runPrune(info)">Cleanup</el-button>
-				<el-button @click="removePath(info)">Remove</el-button>
-				<restore-options-vue :profile="data" :path="info.path" />
+				<el-popconfirm 
+					title="This will remove all data for this folder from the repository. Are you sure?"
+					width="225"
+					icon-color="#ff0000"
+					@confirm="removePath(info)"
+				>
+					<template #reference>
+						<el-button>Remove</el-button>
+					</template>
+				</el-popconfirm>
+				<restore-options-vue :profile="profile" :path="info.path" />
 			</el-card>
 		</el-collapse-item>
-		<el-collapse-item title="New Backup Path" name="newPath">
+		<el-collapse-item title="Add Folder to Backup" name="newPath">
 			<backup-new-vue @created="e => added(e)" />
 		</el-collapse-item>
 		<el-collapse-item title="Prune Settings" name="pruneSettings">
-			<prune-settings-vue :profile="data" @save="updatePruneSettings" />
+			<prune-settings-vue :profile="profile" @save="updatePruneSettings" />
 		</el-collapse-item>
 		<el-collapse-item title="Debug" name="debug">
-			<div style="white-space:pre-line">{{ data }}</div>
+			<div style="white-space:pre-line">{{ profile }}</div>
 		</el-collapse-item>
 	</el-collapse>
 	

@@ -47,6 +47,7 @@ export default defineComponent({
 		v-for="name of list"
 		:key="name"
 		v-loading="working"
+		style="margin: 1em auto; width: 325px;"
 	>
 		<h2>{{ name }}</h2>
 		<el-button @click="select(name)" plain type="primary">

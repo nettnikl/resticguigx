@@ -96,6 +96,6 @@ code {
 	}
 }
 
-#app {
-	--el-color-primary: #2529a7;
+html.dark #app {
+	--el-color-primary: #575be6;
 }
