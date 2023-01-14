@@ -1,7 +1,6 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { selectDirectory } from '../service/node-api'
-import { hasRunningProcess, getRunningProcess, BackupProcess, BackupSummary } from '../service/repo';
+import { getRunningProcess, BackupProcess, BackupSummary } from '../service/repo';
 import humanizeDuration from 'humanize-duration'
 import { filesize } from "filesize";
 

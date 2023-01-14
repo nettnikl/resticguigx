@@ -5,6 +5,9 @@ import UserProfile, { BackupInfo, PruneSettings } from './model/profile';
 import Process from './model/process';
 import BatchProcess from './model/batch-process'
 import os from 'node:os';
+import fs from 'node:fs/promises'
+import { openFolder } from './node-api'
+
 const binPath = process.env.NODE_ENV === 'development' 
 	? Path.join(process.cwd(), 'bin', 'linux', 'restic') 
 	: Path.join(process.resourcesPath!, 'bin', os.platform() === 'win32' ? 'restic.exe' : 'restic');
@@ -31,12 +34,21 @@ function exec(args: string[], env: Record<string, string>): Promise<Output> {
 	})
 }
 
-export async function assertRepoExists(repoDir: string, password: string) {
+export async function assertRepoExists(repoDir: string, password: string): Promise<Snapshot[]> {
 	try {
-		await stats(repoDir, password);
+		return getSnapshots(repoDir, password);
 	} catch (e) {
-		console.log('error in stats', e);
 		await initRepo(repoDir, password);
+		return []
+	}
+}
+
+export async function pathIsDirectory(path: string): Promise<boolean> {
+	try {
+		let stat = await fs.stat(path);
+		return stat.isDirectory()
+	} catch (e) {
+		return false;
 	}
 }
 
@@ -186,14 +198,101 @@ export async function forget(profile: UserProfile, settings: Partial<PruneSettin
 	return firstLine[0] === '[' ? JSON.parse(firstLine) : []
 }
 
-export async function getSnapshots(profile: UserProfile): Promise<Snapshot[]> {
+export async function getSnapshots(repoDir: string, password: string): Promise<Snapshot[]> {
 	let res = await exec([
 		'snapshots',
-		`-r=${profile.repoPath}`,
+		`-r=${repoDir}`,
 		'--json'
 	], {
-		RESTIC_PASSWORD: profile.storedSecred
+		RESTIC_PASSWORD: password
 	});
 	console.log('snapshots output', res);
 	return res.stdout ? JSON.parse(res.stdout) : []
+}
+
+let currentMount: Process|null = null;
+const mountBasePath = Path.join(os.tmpdir(), 'restic-mount-'+Date.now());
+export async function mount(profile: UserProfile, path: string): Promise<Process> {
+	if (currentMount) {
+		if (!currentMount.isConnected()) {
+			currentMount = null
+		} else {
+			if (currentMount.info.path !== path) {
+				currentMount.stop();
+				currentMount = null;
+			}
+		}
+	}
+	if (!currentMount) {
+		await fs.mkdir(mountBasePath, { recursive: true, mode: 0o770 })
+
+		let process = new Process(binPath, [
+			'--json',
+			'mount',
+			`--tag=${path}`,
+			`-r=${profile.repoPath}`,
+			mountBasePath
+		], {
+			RESTIC_PASSWORD: profile.storedSecred
+		}, { path });
+		currentMount = process;
+		process.start();
+		process.waitForFinish()?.then(() => {
+			console.log('mount process finished')
+			currentMount = null;
+		}).catch((err) => {
+			console.error('mount process error', err);
+			currentMount = null;
+		})
+	}
+
+	let fullPath = Path.join(mountBasePath, 'tags', path.substring(1), 'latest', path.substring(1));
+	await waitForPath(fullPath, 5);
+	await openFolder(fullPath);
+	
+	return currentMount;
+}
+
+export async function unmount() {
+	if (!currentMount || currentMount.isKilled()) throw new Error('not mounted')
+	currentMount.stop();
+}
+
+export async function restore(profile: UserProfile, path: string, targetPath: string) {
+	await fs.mkdir(targetPath, { recursive: true })
+	let params = [
+		'--json',
+		'restore',
+		`--tag=${path}`,
+		`-r=${profile.repoPath}`,
+		`--target=${targetPath}`,
+		'latest'
+	]
+	let process = new Process(binPath, params, {
+		RESTIC_PASSWORD: profile.storedSecred
+	}, { path })
+	process.start();
+
+	return process;
+}
+
+async function waitForPath(dir: string, retry=5): Promise<boolean> {
+	try {
+		let stat = await fs.stat(dir);
+		if (stat.isDirectory()) return true;
+		else throw new Error('is not a directory: '+dir);
+	} catch (e: any) {
+		if (e.code === 'ENOENT') {
+			if (retry < 1) throw new Error('waitForPath timed out for: '+dir);
+			await sleep(500);
+			return waitForPath(dir, retry-1);
+		}
+		throw e;
+	}
+}
+
+function sleep(ms: number) {
+	return new Promise(res => {
+		setTimeout(res, ms)
+	})
 }

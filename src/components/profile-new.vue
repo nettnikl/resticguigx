@@ -34,12 +34,23 @@ export default defineComponent({
 				if (this.repoType === 'local') {
 					repoDir = this.repoSelect;
 				}
-				await Repo.assertRepoExists(repoDir, this.password);
+				let snapshots = await Repo.assertRepoExists(repoDir, this.password);
 				let model = await createProfile(this.newName);
 				model.repoPath = repoDir;
 				model.passwordStrategy = this.passStrat;
 				if (model.passwordStrategy === 'profile') {
 					model.setStoredSecret( this.password )
+				}
+				let paths = new Set(snapshots.flatMap(e => e.paths));
+				for (let p of paths) {
+					let isDir = await Repo.pathIsDirectory(p);
+					if (isDir) {
+						let lastStamp = snapshots.reduce((c, v) => {
+							if (v.paths.includes(p) && v.time > c) return v.time;
+							else return c;
+						}, '')
+						model.backupDirs.push({ path: p, lastBackupFinished: lastStamp })
+					}
 				}
 				model.pruneSettings = {
 					keepMonthly: 6

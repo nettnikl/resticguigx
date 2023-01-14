@@ -16,3 +16,8 @@ export async function getStorageDir(): Promise<string> {
 	}
 	return storageDir
 }
+
+export async function openFolder(path: string) {
+	console.log('open-folder', path);
+	await ipcRenderer.send('open-folder', path)
+}

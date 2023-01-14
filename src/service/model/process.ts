@@ -1,12 +1,15 @@
 import child_process from 'child_process'
 import { BackupInfo } from './profile'
 
+const ps = Symbol('process')
+
 export default class Process {
 
+
+	[ps]: child_process.ChildProcess|null = null
 	cmd = ''
 	args: string[] = []
 	env: Record<string, string> = {}
-	process: child_process.ChildProcess|null = null
 	promise: Promise<boolean>|null = null
 	info: BackupInfo
 
@@ -19,7 +22,7 @@ export default class Process {
 
 	start() {
 		console.log('starting', this.cmd, this.args, this.env)
-		this.process = child_process.spawn(this.cmd, this.args, {
+		let p = child_process.spawn(this.cmd, this.args, {
 			stdio: [
 				null,
 				'pipe',
@@ -30,9 +33,10 @@ export default class Process {
 				...this.env
 			}
 		})
-		console.log('started', this.process)
+		Object.defineProperty(this, ps, { value: p, enumerable: false })
+		console.log('started', p)
 		this.promise = new Promise((resolve, reject) => {
-			this.process!.once('exit', (code) => {
+			this[ps]!.once('exit', (code) => {
 				if (code === 3) {
 					console.warn('snapshot was incomplete');
 					resolve(false)
@@ -45,8 +49,15 @@ export default class Process {
 					resolve(true)
 				}
 			})
-			this.process!.once('error', reject)
+			this[ps]!.once('error', (err) => {
+				console.log('process error', err);
+				reject(err);
+			});
 		})
+	}
+
+	stop() {
+		this[ps]!.kill()
 	}
 
 	waitForFinish() {
@@ -54,11 +65,19 @@ export default class Process {
 	}
 
 	getStdOut() {
-		return this.process!.stdout;
+		return this[ps]!.stdout;
 	}
 
 	getStdErr() {
-		return this.process!.stderr;
+		return this[ps]!.stderr;
+	}
+
+	isConnected() {
+		return this[ps]?.connected;
+	}
+
+	isKilled() {
+		return this[ps]?.killed
 	}
 
 }

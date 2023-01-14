@@ -11,7 +11,7 @@ Restic + Vue3 + Electron
 
 ## Roadmap ##
 
-
+- expose the concept of snapshots
 
 ## dev ##
 
@@ -27,6 +27,9 @@ for packaging, download mac and win versions to ./bin/mac/restic and ./bin/win/r
 - restore
 - mount
 - on first add existing repo, parse snapshots to add folders
+- on select profile (or first time in the day, update profile from repo)
+
+- fix unmount problem
 
 - encrypted profile
 - ask for password strat

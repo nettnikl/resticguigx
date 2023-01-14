@@ -9,6 +9,7 @@ import pruneSettingsVue from './prune-settings.vue';
 import { filesize } from "filesize";
 import { error } from 'console';
 import { ElDescriptions, ElDescriptionsItem, ElAlert, ElButton, ElButtonGroup, ElCard, ElCollapse, ElCollapseItem, ElMessage } from 'element-plus';
+import restoreOptionsVue from './restore-options.vue';
 
 export default defineComponent({
 	name: 'ProfileOverview',
@@ -16,7 +17,8 @@ export default defineComponent({
 	components: {
 		backupNewVue,
 		backupProgressVue,
-		pruneSettingsVue
+		pruneSettingsVue,
+		restoreOptionsVue
 	},
 
 	props: {
@@ -188,6 +190,9 @@ export default defineComponent({
 				console.error(e);
 			}
 			this.working = false;
+		},
+		async runMount(info: BackupInfo) {
+			
 		}
 	}
 
@@ -243,6 +248,7 @@ export default defineComponent({
 				<el-button @click="runBackup(info)">Backup</el-button>
 				<el-button @click="runPrune(info)">Cleanup</el-button>
 				<el-button @click="removePath(info)">Remove</el-button>
+				<restore-options-vue :profile="data" :path="info.path" />
 			</el-card>
 		</el-collapse-item>
 		<el-collapse-item title="New Backup Path" name="newPath">

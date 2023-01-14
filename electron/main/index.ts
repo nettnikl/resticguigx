@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain, dialog, ipcRenderer } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron'
 import { release } from 'node:os'
 import { join } from 'node:path'
 
@@ -125,4 +125,8 @@ ipcMain.handle('select-dirs', async (event, arg) => {
 
 ipcMain.handle('read-user-data', async (event, fileName) => {
 	return join(app.getPath('userData'), 'profiles');
+})
+
+ipcMain.on('open-folder', async(event, fullPath: string) => {
+	await shell.showItemInFolder(fullPath)
 })
