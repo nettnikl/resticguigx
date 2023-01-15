@@ -6,8 +6,8 @@ import psaux from 'psaux'
 // 	console.log('[Receive Main-process message]:', ...args)
 // })
 
-export async function selectDirectory() {
-	let result = await ipcRenderer.invoke('select-dirs')
+export async function selectDirectory(multiple?: boolean) {
+	let result = await ipcRenderer.invoke('select-dirs', { multiple })
 	return result;
 }
 

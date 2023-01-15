@@ -14,11 +14,9 @@ export default defineComponent({
 		summary: {} as Partial<BackupSummary>,
 		error: '',
 		progressBars: [] as { path: string, percent: number }[],
-		current: 0
+		current: 0,
+		running: true
 	}),
-
-	computed: {
-	},
 
 	created() {
 		let process = getRunningProcess();
@@ -28,6 +26,9 @@ export default defineComponent({
 				percent: 0
 			});
 		});
+		process?.waitForFinish().catch(() => {}).then(() => {
+			this.running = false;
+		})
 		process?.getStdOut()?.on('data', (chk) => {
 			let str = chk.toString('utf-8');
 			let data: any;
@@ -97,6 +98,7 @@ export default defineComponent({
 		<el-button
 			variant="danger"
 			@click="cancel"
+			v-show="running"
 		>
 			Cancel 
 		</el-button>

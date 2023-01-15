@@ -15,11 +15,11 @@ export default defineComponent({
 
 	methods: {
 		async selectDir() {
-			let res = await selectDirectory();
+			let res = await selectDirectory(true);
 			if (res.canceled) return;
-			let path = res.filePaths[0];
-			if (!path) return;
-			this.$emit('created', path);
+			for (let path of res.filePaths) {
+				this.$emit('created', path);
+			}
 		}
 	}
 
@@ -28,5 +28,6 @@ export default defineComponent({
 </script>
 
 <template>
+	<p>Select new folders to back up</p>
 	<el-button @click="selectDir" type="primary" icon="CirclePlusFilled">Select Folder</el-button>
 </template>

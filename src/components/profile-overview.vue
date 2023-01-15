@@ -249,9 +249,9 @@ export default defineComponent({
 	<div style="margin: 16px 0" v-show="hasFolders">
 		<el-button-group>
 			<el-button @click="showProgress = false" v-if="showProgress && !working">Close Progress</el-button>
-			<el-button @click="() => runBackup()" :disabled="working" type="primary">Run full Backup</el-button>
+			<el-button @click="() => runBackup()" :disabled="working" type="primary" icon="Coin">Run full Backup</el-button>
+			<el-button @click="() => runPrune()" :disabled="working" icon="Files">Cleanup Repo</el-button>
 			<el-button @click="updateStats" :disabled="working">Update Statistics</el-button>
-			<el-button @click="() => runPrune()" :disabled="working">Cleanup Repo</el-button>
 		</el-button-group>
 	</div>
 
@@ -280,8 +280,8 @@ export default defineComponent({
 					<el-descriptions-item label="Last Backup Completed">{{ $filters.dateTime(info.lastBackupFinished) || 'never' }}</el-descriptions-item>
 					<el-descriptions-item label="Last Cleaned">{{ $filters.dateTime(info.lastCleanup) || 'never' }}</el-descriptions-item>
 				</el-descriptions>
-				<el-button @click="runBackup(info)">Backup</el-button>
-				<el-button @click="runPrune(info)">Cleanup</el-button>
+				<el-button @click="runBackup(info)" icon="Coin">Backup</el-button>
+				<el-button @click="runPrune(info)" icon="Files">Cleanup</el-button>
 				<el-popconfirm 
 					title="This will remove all data for this folder from the repository. Are you sure?"
 					width="225"

@@ -22,8 +22,7 @@ for packaging, download mac and win versions to ./bin/mac/restic and ./bin/win/r
 
 ### todo
 
-- set exclude dirs
-- allow to cancel backup process
+- confirm profile delete
 
 - fix unmount problem
 

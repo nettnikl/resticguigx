@@ -116,8 +116,12 @@ ipcMain.handle('open-win', (_, arg) => {
 })
 
 ipcMain.handle('select-dirs', async (event, arg) => {
+	const properties: ("openDirectory" | "openFile" | "multiSelections" | "showHiddenFiles" | "createDirectory" | "promptToCreate" | "noResolveAliases" | "treatPackageAsDirectory" | "dontAddToRecent")[] = ['openDirectory'];
+	if (arg && arg.multiple) {
+		properties.push('multiSelections')
+	}
 	const result = await dialog.showOpenDialog(win, {
-		properties: ['openDirectory']
+		properties
 	})
 	console.log('directories selected', result.filePaths)
 	return result;
