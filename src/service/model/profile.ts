@@ -23,6 +23,12 @@ export type PruneSettings = {
 	keepMonthly: number
 }
 
+export type ExcludeSettings = {
+	paths: string[],
+	largerThanSize: number,
+	largerThanType: string
+}
+
 export default class UserProfile {
 
 	static PW_STRAT_PROFILE = 'profile'
@@ -34,6 +40,7 @@ export default class UserProfile {
 	repoInfo: Partial<RepoInfo> = {}
 	backupDirs: BackupInfo[] = []
 	pruneSettings: Partial<PruneSettings> = {}
+	excludeSettings: Partial<ExcludeSettings> = {}
 	passwordStrategy = UserProfile.PW_STRAT_PROFILE
 	storedSecret: string = ''
 	_tempSecret: string = ''

@@ -34,7 +34,7 @@ export default defineComponent({
 
 	async created() {
 		let s = this.profile.pruneSettings || {}
-		this.settings.keepLast = s.keepLast || 0
+		this.settings.keepLast = s.keepLast ? ~~s.keepLast : 0
 		this.settings.keepHourly = s.keepHourly || 0
 		this.settings.keepDaily = s.keepDaily || 0
 		this.settings.keepWeekly = s.keepWeekly || 0
@@ -59,22 +59,22 @@ export default defineComponent({
 
 <template>
 	<el-form-item label="Keep Latest">
-		<el-input v-model="settings.keepLast" type="number" number step="1" />
+		<el-input-number v-model="settings.keepLast" :strict-step="true" step="1" />
 	</el-form-item>
 	<el-form-item label="Keep Hourly">
-		<el-input v-model="settings.keepHourly" type="number" number step="1" />
+		<el-input-number v-model="settings.keepHourly" :strict-step="true" step="1" />
 	</el-form-item>
 	<el-form-item label="Keep Daily">
-		<el-input v-model="settings.keepDaily" type="number" number step="1" />
+		<el-input-number v-model="settings.keepDaily" :strict-step="true" step="1" />
 	</el-form-item>
 	<el-form-item label="Keep Weekly">
-		<el-input v-model="settings.keepWeekly" type="number" number step="1" />
+		<el-input-number v-model="settings.keepWeekly" :strict-step="true" step="1" />
 	</el-form-item>
 	<el-form-item label="Keep Monthly">
-		<el-input v-model="settings.keepMonthly" type="number" number step="1" />
+		<el-input-number v-model="settings.keepMonthly" :strict-step="true" step="1" />
 	</el-form-item>
-	<el-button @click="preview">Preview</el-button>
-	<el-button @click="save">Save</el-button>
+	<el-button @click="preview" icon="ZoomIn">Preview</el-button>
+	<el-button @click="save" icon="CircleCheckFilled" type="primary">Save</el-button>
 	<el-card
 		v-for="group of previewResult"
 		:key="group.paths[0]"

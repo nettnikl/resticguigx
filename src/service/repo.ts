@@ -104,15 +104,27 @@ export async function backup(profile: UserProfile, paths: BackupInfo[]): Promise
 	if (paths.length === 0) throw new Error('no paths specified')
 	await checkForProcessRunning(binPath);
 	let processes: Process[] = [];
+	let exclude: string[] = [];
+	if (profile.excludeSettings) {
+		if (profile.excludeSettings.largerThanSize && profile.excludeSettings.largerThanSize > 0) {
+			exclude.push(`--exclude-larger-than=${profile.excludeSettings.largerThanSize}${profile.excludeSettings.largerThanType}`)
+		}
+		if (profile.excludeSettings.paths) {
+			profile.excludeSettings.paths.forEach(path => {
+				exclude.push(`--iexclude=${path}`)
+			})
+		}
+	}
 	for (let info of paths) {
-		let process = new Process(binPath, [
+		let params = exclude.concat(...[
 			'--json',
 			'backup',
 			'--exclude-caches',
 			`--tag=${info.path}`,
 			`-r=${profile.repoPath}`,
 			`${info.path}`
-		], {
+		]);
+		let process = new Process(binPath, params, {
 			RESTIC_PASSWORD: profile.getSecret()
 		}, info)
 		processes.push(process);

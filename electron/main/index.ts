@@ -130,3 +130,6 @@ ipcMain.handle('read-user-data', async (event, fileName) => {
 ipcMain.on('open-folder', async(event, fullPath: string) => {
 	await shell.showItemInFolder(fullPath)
 })
+ipcMain.on('open-url', async(event, url: string) => {
+	await shell.openExternal(url)
+})

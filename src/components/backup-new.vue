@@ -28,5 +28,5 @@ export default defineComponent({
 </script>
 
 <template>
-	<el-button @click="selectDir">Select Folder</el-button>
+	<el-button @click="selectDir" type="primary" icon="CirclePlusFilled">Select Folder</el-button>
 </template>

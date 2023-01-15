@@ -1,11 +1,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
-import UserProfile, { BackupInfo, PruneSettings } from '../service/model/profile';
-import { loadProfile, saveProfile } from '../service/user-storage'
+import UserProfile, { BackupInfo, ExcludeSettings, PruneSettings } from '../service/model/profile';
+import { saveProfile } from '../service/user-storage'
 import * as Repo from '../service/repo'
 import backupNewVue from './backup-new.vue';
 import backupProgressVue from './backup-progress.vue';
 import pruneSettingsVue from './prune-settings.vue';
+import excludeSettingsVue from './exclude-settings.vue';
 import { filesize } from "filesize";
 import { error } from 'console';
 import { ElDescriptions, ElDescriptionsItem, ElAlert, ElButton, ElButtonGroup, ElCard, ElCollapse, ElCollapseItem, ElMessage } from 'element-plus';
@@ -18,6 +19,7 @@ export default defineComponent({
 		backupNewVue,
 		backupProgressVue,
 		pruneSettingsVue,
+		excludeSettingsVue,
 		restoreOptionsVue
 	},
 
@@ -162,6 +164,15 @@ export default defineComponent({
 			})
 			this.accordion = '';
 		},
+		async updateExcludeSettings(s: ExcludeSettings) {
+			this.profile.excludeSettings = s;
+			await this.saveProfile();
+			ElMessage({
+				message: 'Settings have been saved',
+				type: 'success'
+			})
+			this.accordion = '';
+		},
 		async runPrune(info?: BackupInfo) {
 			this.working = true;
 			try {
@@ -246,7 +257,7 @@ export default defineComponent({
 
 	
 
-	<el-collapse accordion v-model="accordion" v-loading="working">
+	<el-collapse accordion v-model="accordion" v-loading="working" style="text-align: left;">
 		<el-collapse-item 
 			title="Folders"
 			name="paths"
@@ -290,15 +301,15 @@ export default defineComponent({
 		<el-collapse-item title="Prune Settings" name="pruneSettings">
 			<prune-settings-vue :profile="profile" @save="updatePruneSettings" />
 		</el-collapse-item>
+		<el-collapse-item title="Exclude Settings" name="excludeSettings">
+			<exclude-settings-vue :profile="profile" @save="updateExcludeSettings" />
+		</el-collapse-item>
 		<el-collapse-item title="Unlock" name="unlock">
 			<el-alert type="info" show-icon :closable="false">
 				Sometimes the repository will not be closed properly and you get an error saying it is locked.
-				If that happens, you can manually send the unlock command here.
+				<br/>If that happens, you can manually send the unlock command here.
 			</el-alert>
 			<el-button @click="unlock" variant="notice">Unlock</el-button>
-		</el-collapse-item>
-		<el-collapse-item title="Debug" name="debug">
-			<div style="white-space:pre-line">{{ profile }}</div>
 		</el-collapse-item>
 	</el-collapse>
 	
