@@ -138,8 +138,6 @@ export default defineComponent({
 						message: 'path deleted from repository',
 						type: 'success'
 					})
-				} else {
-					throw new Error('cannot forget last snapshot');
 				}
 				let stats = await Repo.stats(this.profile.repoPath, this.profile.getSecret())
 				this.profile.repoStats = stats;
@@ -189,6 +187,27 @@ export default defineComponent({
 			} catch (e: any) {
 				this.error = e.message;
 				console.error(e);
+			}
+			this.working = false;
+		},
+		async unlock() {
+			this.working = true;
+			try {
+				let running = await Repo.checkForRunningProcess();
+				if (running) {
+					ElMessage({
+						message: 'a process is still running',
+						type: 'error'
+					})
+				} else {
+					await Repo.unlock(this.profile.repoPath, this.profile.getSecret())
+					ElMessage({
+						message: 'Successfully unlocked Repository',
+						type: 'success'
+					})
+				}
+			} catch(e: any) {
+				this.error = e.message;
 			}
 			this.working = false;
 		}
@@ -270,6 +289,13 @@ export default defineComponent({
 		</el-collapse-item>
 		<el-collapse-item title="Prune Settings" name="pruneSettings">
 			<prune-settings-vue :profile="profile" @save="updatePruneSettings" />
+		</el-collapse-item>
+		<el-collapse-item title="Unlock" name="unlock">
+			<el-alert type="info" show-icon :closable="false">
+				Sometimes the repository will not be closed properly and you get an error saying it is locked.
+				If that happens, you can manually send the unlock command here.
+			</el-alert>
+			<el-button @click="unlock" variant="notice">Unlock</el-button>
 		</el-collapse-item>
 		<el-collapse-item title="Debug" name="debug">
 			<div style="white-space:pre-line">{{ profile }}</div>

@@ -42,6 +42,7 @@
 		"filesize": "^10.0.6",
 		"humanize-duration": "^3.27.3",
 		"pinia": "^2.0.28",
+		"psaux": "^0.4.0",
 		"vue-router": "^4.1.6"
 	}
 }

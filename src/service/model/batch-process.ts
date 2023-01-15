@@ -16,6 +16,7 @@ export default class BatchProcess {
 	current = 0
 	stdout: Stream.Transform
 	stderr: Stream.Transform
+	running = false;
 
 	constructor(p: Process[]) {
 		this.processes = p;
@@ -32,10 +33,13 @@ export default class BatchProcess {
 	}
 
 	start() {
+		if (this.running) return;
+		this.running = true;
 		this.#nextProcess();
 	}
 
 	async #nextProcess() {
+		if (!this.running) return;
 		let process = this.getCurrentProcess();
 		if (!process) {
 			this.#resolve();
@@ -75,6 +79,17 @@ export default class BatchProcess {
 
 	getStdErr(): Stream.Readable {
 		return this.stderr
+	}
+
+	stop() {
+		if (!this.running) return;
+		this.running = false;
+		this.getCurrentProcess().stop();
+		this.#resolve();
+	}
+
+	isRunning() {
+		return this.running;
 	}
 
 }

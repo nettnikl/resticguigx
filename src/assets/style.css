@@ -99,3 +99,7 @@ code {
 html.dark #app {
 	--el-color-primary: #575be6;
 }
+
+.el-popover.el-popper {
+	word-break: keep-all;
+}

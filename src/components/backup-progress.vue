@@ -67,6 +67,11 @@ export default defineComponent({
 		},
 		filesize(n: number) {
 			return filesize(n)
+		},
+		cancel() {
+			let process = getRunningProcess();
+			if (!process || !process.isRunning()) return;
+			process.stop()
 		}
 	}
 
@@ -89,6 +94,12 @@ export default defineComponent({
 		>
 			{{ p.path }}: {{ p.percent }}%
 		</el-progress>
+		<el-button
+			variant="danger"
+			@click="cancel"
+		>
+			Cancel 
+		</el-button>
 		<el-descriptions
 			title="Summary"
 			v-show="!!summary.snapshot_id"

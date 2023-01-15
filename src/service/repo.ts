@@ -6,7 +6,7 @@ import Process from './model/process';
 import BatchProcess from './model/batch-process'
 import os from 'node:os';
 import fs from 'node:fs/promises'
-import { openFolder } from './node-api'
+import { openFolder, checkForProcessRunning } from './node-api'
 
 const binPath = process.env.NODE_ENV === 'development' 
 	? Path.join(process.cwd(), 'bin', 'linux', 'restic') 
@@ -102,6 +102,7 @@ export type BackupProcess = {
 export async function backup(profile: UserProfile, paths: BackupInfo[]): Promise<BatchProcess> {
 	if (runningProcess) throw new Error('a restic process is already running')
 	if (paths.length === 0) throw new Error('no paths specified')
+	await checkForProcessRunning(binPath);
 	let processes: Process[] = [];
 	for (let info of paths) {
 		let process = new Process(binPath, [
@@ -119,10 +120,38 @@ export async function backup(profile: UserProfile, paths: BackupInfo[]): Promise
 	let batch = new BatchProcess(processes);
 	batch.start();
 	runningProcess = batch;
-	batch.waitForFinish().then(() => {
+	batch.waitForFinish()
+	.catch(() => {})
+	.then(() => {
 		runningProcess = null;
 	})
 	return batch;
+}
+
+// function watchForLockedError(repoDir: string, password: string) {
+// 	return async function(err: Error) {
+// 		try {
+// 			if (!err.message.includes('locked')) return;
+// 			let running = await checkForProcessRunning(binPath);
+// 			if (running) return;
+// 			await unlock(repoDir, password)
+// 		} catch (err: any) {
+// 			console.error('error trying to unlock', err);
+// 		}
+// 	}
+// }
+
+export async function checkForRunningProcess() {
+	return checkForProcessRunning(binPath)
+}
+
+export async function unlock(repoDir: string, password: string) {
+	await exec([
+		'unlock',
+		`-r=${repoDir}`
+	], {
+		RESTIC_PASSWORD: password
+	})
 }
 
 export type Snapshot = {
@@ -178,7 +207,7 @@ export async function forget(profile: UserProfile, settings: Partial<PruneSettin
 		if (!snapshotId) throw new Error('must provide paths or snapshotId')
 		params.push(snapshotId)
 	}
-	console.log(params, keep);
+	// console.log(params, keep);
 	let res = await exec(params, {
 		RESTIC_PASSWORD: profile.getSecret()
 	});
@@ -229,13 +258,11 @@ export async function mount(profile: UserProfile, path: string): Promise<Process
 		}, { path });
 		currentMount = process;
 		process.start();
-		process.waitForFinish()?.then(() => {
-			console.log('mount process finished')
-			currentMount = null;
-		}).catch((err) => {
-			console.error('mount process error', err);
-			currentMount = null;
-		})
+		process.waitForFinish()!
+			.catch(() => {})
+			.then(() => {
+				currentMount = null;
+			})
 	}
 
 	let fullPath = Path.join(mountBasePath, 'tags', path.substring(1), 'latest', path.substring(1));
