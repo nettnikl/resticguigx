@@ -17,8 +17,8 @@ build:
     - curl "https://github.com/restic/restic/releases/download/v${VERSION}/restic_${VERSION}_darwin_amd64.bz2" -o bin/mac/restic.bz2
     - curl "https://github.com/restic/restic/releases/download/v${VERSION}/restic_${VERSION}_windows_amd64.zip" -o bin/win/restic.zip
     - cd bin/linux
-	  - bzip2 -d restic.bz2
-	  - chmod u+x restic
+    - bzip2 -d restic.bz2
+    - chmod u+x restic
     - cd ../mac
     - bzip2 -d restic.bz2
     - chmod u+x restic
