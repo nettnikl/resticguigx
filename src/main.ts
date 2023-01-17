@@ -1,5 +1,4 @@
 import { createApp } from 'vue'
-import { createPinia } from 'pinia'
 import router from './router'
 import App from './App.vue'
 import './service/user-storage'
@@ -14,7 +13,6 @@ import "./assets/style.css"
 
 const app = createApp(App)
 	
-app.use(createPinia())
 app.use(router)
 app.use(ElementPlus)
 setup(app)
@@ -30,8 +28,4 @@ app.mount('#app')
 
 console.log('app loaded', app);
 
-Repo.stats('/home/ineluki/Codez/int/restic-ui3/data/repo', 'test').then(res => {
-	console.log('res', res)
-}).catch(err => {
-	console.error(err)
-})
+

@@ -23,6 +23,11 @@ for packaging, download mac and win versions to ./bin/mac/restic and ./bin/win/r
 ### todo
 
 - confirm profile delete
+- on wrong pw or repo not found, display error
+- prevent duplicate folders
+- prevent adding repo to itself
+- rename profile-list to close profile, and delete from memory
+- about page
 
 - fix unmount problem
 
