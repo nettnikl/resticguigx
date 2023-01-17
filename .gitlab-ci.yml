@@ -5,9 +5,6 @@ variables:
   VERSION: "0.15.0"
   NODE_ENV: "staging"
 
-only:
-  refs:
-    - tags
 
 build:
   stage: build
