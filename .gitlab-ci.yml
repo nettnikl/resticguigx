@@ -8,7 +8,7 @@ variables:
 build:
   stage: build
   only:
-    - tag
+    - tags
   image: docker.io/electronuserland/builder:wine-mono
   before_script:
     - npm install -g pnpm

@@ -2,6 +2,7 @@
 
 Restic + Vue3 + Electron
 
+![Screenshot](https://gitlab.com/stormking/resticguigx/-/raw/master/screenshot.png "Restic-UI-GX")
 
 
 ## Features ##
@@ -29,5 +30,7 @@ download latest restic release and place in ./bin/linux/restic
 
 - icon
 - fix unmount problem
+- display/calc backup eta
+
 
 
