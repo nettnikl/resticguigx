@@ -11,7 +11,7 @@ import { openFolder, checkForProcessRunning } from './node-api'
 const binPath = process.env.NODE_ENV === 'development' 
 	? Path.join(process.cwd(), 'bin', 'linux', 'restic') 
 	: Path.join(process.resourcesPath!, 'bin', os.platform() === 'win32' ? 'restic.exe' : 'restic');
-
+console.log(binPath)
 type Output = { stdout: string, stderr: string }
 
 function exec(args: string[], env: Record<string, string>): Promise<Output> {
@@ -104,7 +104,7 @@ export async function backup(profile: UserProfile, paths: BackupInfo[]): Promise
 	if (paths.length === 0) throw new Error('no paths specified')
 	await checkForProcessRunning(binPath);
 	let processes: Process[] = [];
-	let exclude: string[] = [];
+	let exclude: string[] = [`--iexclude=${profile.repoPath}`];
 	if (profile.excludeSettings) {
 		if (profile.excludeSettings.largerThanSize && profile.excludeSettings.largerThanSize > 0) {
 			exclude.push(`--exclude-larger-than=${profile.excludeSettings.largerThanSize}${profile.excludeSettings.largerThanType}`)

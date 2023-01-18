@@ -115,7 +115,7 @@ export default defineComponent({
 			<el-descriptions-item label="New Files">{{ summary.files_new }}</el-descriptions-item>
 			<el-descriptions-item label="Changed Files">{{ summary.files_changed }}</el-descriptions-item>
 			<el-descriptions-item label="Unchanged Files">{{ summary.files_unmodified }}</el-descriptions-item>
-			<el-descriptions-item label="Duration">{{ humanizeDuration(summary.total_duration || 0) }}</el-descriptions-item>
+			<el-descriptions-item label="Duration">{{ humanizeDuration((summary.total_duration || 1) * 1000) }}</el-descriptions-item>
 			<el-descriptions-item label="Total Files Processed">{{ summary.total_files_processed }}</el-descriptions-item>
 			<el-descriptions-item label="Total Size Processed">{{ filesize(summary.total_bytes_processed || 0) }}</el-descriptions-item>
 		</el-descriptions>

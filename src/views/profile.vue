@@ -81,9 +81,7 @@ export default defineComponent({
 
 <template>
 	<h2>Profile: {{ profileName }}</h2>
-	<p>
-		<RouterLink to="/">Profile List</RouterLink>
-	</p>
+	<el-alert :title="error" type="error" v-if="error" />
 	<el-card
 		v-show="!showPasswordInput && !canAccess"
 		v-loading="working"
@@ -93,6 +91,7 @@ export default defineComponent({
 	<el-card
 		v-if="showPasswordInput"
 		v-loading="working"
+		style="width: 400px; margin: 3rem auto;"
 	>
 		<el-form-item label="Repo Password">
 			<el-input type="password"

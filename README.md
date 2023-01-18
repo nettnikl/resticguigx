@@ -2,12 +2,17 @@
 
 Restic + Vue3 + Electron
 
+
+
 ## Features ##
 
 - setup profiles with multiple backup locations
 - forget settings
 - store repo password
 - shows repo size
+- exclude settings
+- restore to temp path or original path
+- mount to restore files manually
 
 ## Roadmap ##
 
@@ -18,16 +23,11 @@ Restic + Vue3 + Electron
 ### setup
 
 download latest restic release and place in ./bin/linux/restic
-for packaging, download mac and win versions to ./bin/mac/restic and ./bin/win/restic.exe
+
 
 ### todo
 
-- confirm profile delete
-- on wrong pw or repo not found, display error
-- prevent duplicate folders
-- prevent adding repo to itself
-- rename profile-list to close profile, and delete from memory
-- about page
-
+- icon
 - fix unmount problem
+
 

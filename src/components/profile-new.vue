@@ -3,7 +3,6 @@ import { defineComponent } from 'vue';
 import * as Repo from '../service/repo';
 import { createProfile, saveProfile } from '../service/user-storage'
 import { selectDirectory } from '../service/node-api'
-import { FormInstance } from 'element-plus';
 import UserProfile from '../service/model/profile';
 
 export default defineComponent({

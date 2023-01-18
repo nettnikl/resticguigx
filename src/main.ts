@@ -5,7 +5,7 @@ import './service/user-storage'
 import ElementPlus from 'element-plus'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import setup from './service/global-props'
-import * as Repo from './service/repo';
+import { openLink } from './service/node-api'
 
 import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
@@ -29,3 +29,12 @@ app.mount('#app')
 console.log('app loaded', app);
 
 
+document.addEventListener('click', (event) => {
+	let target: HTMLElement = event.target! as any;
+	let href = target.getAttribute('href');
+	// console.log('click', href);
+	if (href && href.startsWith('http')) {
+		event.preventDefault();
+		openLink(href);
+	}
+})

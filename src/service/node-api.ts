@@ -20,8 +20,11 @@ export async function getStorageDir(): Promise<string> {
 }
 
 export async function openFolder(path: string) {
-	console.log('open-folder', path);
 	await ipcRenderer.send('open-folder', path)
+}
+
+export async function openLink(url: string) {
+	await ipcRenderer.send('open-url', url)
 }
 
 export async function pathIsDirectory(path: string): Promise<boolean> {

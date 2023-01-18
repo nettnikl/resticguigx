@@ -88,25 +88,21 @@ export default defineComponent({
 				console.error(e);
 			}
 			this.working = false;
+			await this.runPrune();
 			this.accordion = acc;
 		},
 		async added(path: string) {
-			this.profile.backupDirs.push({ path })
-			await this.saveProfile();
-			this.accordion = 'paths';
-		},
-		async pruneRepository() {
-			this.working = true;
-			try {
-				
-				let stats = await Repo.stats(this.profile.repoPath, this.profile.getSecret())
-				this.profile.repoStats = stats;
+			let exists = this.profile.backupDirs.find(e => e.path === path);
+			if (exists) {
+				ElMessage({
+					message: 'path '+path+' already exists, skipping',
+					type: 'warning'
+				})
+			} else {
+				this.profile.backupDirs.push({ path })
 				await this.saveProfile();
-			} catch (e: any) {
-				this.error = e.message;
-				console.error(e);
 			}
-			this.working = false;
+			this.accordion = 'paths';
 		},
 		async updateStats() {
 			this.working = true;
@@ -229,6 +225,7 @@ export default defineComponent({
 </script>
 
 <template>
+	<el-card class="card-light">
 	<el-descriptions 
 		title="Info" 
 		border
@@ -270,7 +267,7 @@ export default defineComponent({
 				style="text-align: left; margin-bottom: 8px"
 			>
 				<template #header>
-					<pre>{{ info.path }}</pre>
+					<div style="font-family: monospace; white-space: pre-line">{{ info.path }}</div>
 				</template>
 				<el-descriptions
 					direction="vertical"
@@ -312,5 +309,6 @@ export default defineComponent({
 			<el-button @click="unlock" variant="notice">Unlock</el-button>
 		</el-collapse-item>
 	</el-collapse>
+</el-card>
 	
 </template>

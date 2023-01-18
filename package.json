@@ -1,6 +1,6 @@
 {
 	"name": "restic-gui-gx",
-	"version": "0.8.0",
+	"version": "0.8.1",
 	"main": "dist-electron/main/index.js",
 	"description": "GUI for Restic",
 	"author": "Stormy",
@@ -39,7 +39,6 @@
 		"element-plus": "^2.2.28",
 		"filesize": "^10.0.6",
 		"humanize-duration": "^3.27.3",
-		"pinia": "^2.0.28",
 		"psaux": "^0.4.0",
 		"vue-router": "^4.1.6"
 	}

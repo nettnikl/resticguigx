@@ -3,7 +3,17 @@ import { RouterLink, RouterView } from 'vue-router'
 </script>
 
 <template>
-	<RouterView />
+
+	<nav>
+		<RouterLink to="/">Profile List</RouterLink>
+		<RouterLink to="/about">About</RouterLink>
+	</nav>
+	<main>
+		<RouterView />
+	</main>
+	<footer>
+		
+	</footer>
 </template>
 
 <style scoped>
@@ -20,8 +30,12 @@ header {
 nav {
 	width: 100%;
 	font-size: 12px;
-	text-align: center;
-	margin-top: 2rem;
+	text-align: right;
+	border-bottom: 1px solid #666
+}
+
+footer {
+	
 }
 
 nav a.router-link-exact-active {
@@ -60,12 +74,8 @@ nav a:first-of-type {
 	}
 
 	nav {
-		text-align: left;
-		margin-left: -1rem;
 		font-size: 1rem;
-
 		padding: 1rem 0;
-		margin-top: 1rem;
 	}
 }
 </style>

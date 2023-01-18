@@ -27,10 +27,20 @@ a:hover {
 
 body {
 	margin: 0;
-	display: flex;
 	place-items: center;
 	min-width: 320px;
 	min-height: 100vh;
+
+	/* source: https://projects.verou.me/css3patterns/#carbon */
+	background:
+		linear-gradient(27deg, #151515 5px, transparent 5px) 0 5px,
+		linear-gradient(207deg, #151515 5px, transparent 5px) 10px 0px,
+		linear-gradient(27deg, #222 5px, transparent 5px) 0px 10px,
+		linear-gradient(207deg, #222 5px, transparent 5px) 10px 5px,
+		linear-gradient(90deg, #1b1b1b 10px, transparent 10px),
+		linear-gradient(#1d1d1d 25%, #1a1a1a 25%, #1a1a1a 50%, transparent 50%, transparent 75%, #242424 75%, #242424);
+	background-color: #131313;
+	background-size: 20px 20px;
 }
 
 h1 {
@@ -71,10 +81,14 @@ code {
 }
 
 #app {
-	max-width: 1280px;
+	max-width: 800px;
 	margin: 0 auto;
-	padding: 2rem;
+	padding: 0 2rem;
 	text-align: center;
+	display: flex;
+	flex-flow: column nowrap;
+	min-height: 100vh;
+    justify-content: space-between;
 }
 
 @media (prefers-color-scheme: light) {
@@ -102,4 +116,13 @@ html.dark #app {
 
 .el-popover.el-popper {
 	word-break: keep-all;
+}
+
+
+html.dark .card-light {
+	background-color: rgba(33, 30, 40, 0.8);
+}
+
+.el-alert {
+    border-radius: 6px;
 }

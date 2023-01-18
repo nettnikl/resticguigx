@@ -15,6 +15,7 @@ export default defineComponent({
 	data: () => ({
 		list: [] as string[],
 		newName: '',
+		collapse: '',
 		working: false
 	}),
 
@@ -24,6 +25,7 @@ export default defineComponent({
 
 	async created() {
 		this.list = await listProfiles()
+		if (this.list.length === 0) this.collapse = 'new';
 	},
 	methods: {
 		select(name: string) {
@@ -53,12 +55,22 @@ export default defineComponent({
 		<el-button @click="select(name)" plain type="primary">
 			Select
 		</el-button>
-		<el-button @click="remove(name)" plain type="danger">
-			Delete
-		</el-button>
+		
+		<el-popconfirm 
+			title="This will delete the profile but not the repository data. Are you sure?"
+			width="225"
+			icon-color="#ff0000"
+			@confirm="remove(name)"
+		>
+			<template #reference>
+				<el-button plain type="danger">
+					Delete
+				</el-button>
+			</template>
+		</el-popconfirm>
 	</el-card>
-	<el-collapse>
-		<el-collapse-item title="New Profile">
+	<el-collapse class="el-card" style="padding: 0 2rem;" v-model="collapse">
+		<el-collapse-item title="New Profile" name="new">
 			<profile-new-vue @created="e => select(e)" />
 		</el-collapse-item>
 	</el-collapse>

@@ -2,21 +2,22 @@ stages:
   - build
 
 variables:
-  VERSION: "0.15.0"
+  RESTIC_VERSION: "0.15.0"
   NODE_ENV: "staging"
-
 
 build:
   stage: build
+  only:
+    - tag
   image: docker.io/electronuserland/builder:wine-mono
   before_script:
     - npm install -g pnpm
     - pnpm config set store-dir .pnpm-store
   script:
     - mkdir -p bin/linux bin/mac bin/win
-    - curl -L "https://github.com/restic/restic/releases/download/v${VERSION}/restic_${VERSION}_linux_amd64.bz2" -o bin/linux/restic.bz2
-    - curl -L "https://github.com/restic/restic/releases/download/v${VERSION}/restic_${VERSION}_darwin_amd64.bz2" -o bin/mac/restic.bz2
-    - curl -L "https://github.com/restic/restic/releases/download/v${VERSION}/restic_${VERSION}_windows_amd64.zip" -o bin/win/restic.zip
+    - curl -L "https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_amd64.bz2" -o bin/linux/restic.bz2
+    - curl -L "https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_darwin_amd64.bz2" -o bin/mac/restic.bz2
+    - curl -L "https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_windows_amd64.zip" -o bin/win/restic.zip
     - du -lah bin
     - cd bin/linux
     - bzip2 -d restic.bz2
@@ -26,7 +27,7 @@ build:
     - chmod u+x restic
     - cd ../win
     - unzip -o restic.zip
-    - mv "restic_${VERSION}_windows_amd64.exe" restic.exe
+    - mv "restic_${RESTIC_VERSION}_windows_amd64.exe" restic.exe
     - cd ../..
     - pnpm install
     - pnpm run build

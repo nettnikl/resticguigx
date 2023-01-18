@@ -45,7 +45,7 @@ export async function createProfile(profileName: string) {
 export async function saveProfile(model: UserProfile) {
 	let str = JSON.stringify(model.toStorage());
 	let path = Path.join(await getProfilePath(model.profileName), ProfileFile)
-	await FS.writeFile(path, str, { encoding: 'utf8' })
+	await FS.writeFile(path, str, { encoding: 'utf8', mode: 0o600 })
 }
 
 export async function loadProfile(profileName: string): Promise<UserProfile> {
