@@ -23,14 +23,19 @@ Restic + Vue3 + Electron
 
 ### setup
 
-download latest restic release and place in ./bin/linux/restic
+- pnpm install
+- download latest restic release 
+- place in ./bin/linux/restic
+- make executable
+- pnpm run dev
 
 
 ### todo
 
 - icon
 - fix unmount problem
-- display/calc backup eta
 
+- ?? fix can mount without specifying location
+- should display currently running command
 
 

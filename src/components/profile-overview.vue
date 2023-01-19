@@ -88,7 +88,6 @@ export default defineComponent({
 				console.error(e);
 			}
 			this.working = false;
-			await this.runPrune();
 			this.accordion = acc;
 		},
 		async added(path: string) {
@@ -289,7 +288,7 @@ export default defineComponent({
 						<el-button>Remove</el-button>
 					</template>
 				</el-popconfirm>
-				<restore-options-vue :profile="profile" :path="info.path" />
+				<restore-options-vue :profile="profile" :path="info.path" :hasBackupCompleted="!!info.lastBackupFinished" />
 			</el-card>
 		</el-collapse-item>
 		<el-collapse-item title="Add Folder to Backup" name="newPath">

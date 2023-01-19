@@ -3,6 +3,7 @@ import { defineComponent } from 'vue';
 import { getRunningProcess, BackupProcess, BackupSummary } from '../service/repo';
 import humanizeDuration from 'humanize-duration'
 import { filesize } from "filesize";
+import EtaCalculator from '../service/model/eta'
 
 export default defineComponent({
 	name: 'BackupProgress',
@@ -12,14 +13,29 @@ export default defineComponent({
 	data: () => ({
 		progress: {} as Partial<BackupProcess>,
 		summary: {} as Partial<BackupSummary>,
+		eta: 0,
 		error: '',
 		progressBars: [] as { path: string, percent: number }[],
 		current: 0,
 		running: true
 	}),
 
+	computed: {
+		fileStoring(): string {
+			let a = this.progress?.current_files || []
+			let s = (a.length > 0 ? a[0] : '');
+			return s.length > 90 ? '…'+s.substring(s.length-89) : s
+		},
+		fileProcessing() {
+			let a = this.progress?.current_files || []
+			let s = (a.length > 1 ? a[1] : '');
+			return s.length > 81 ? '…'+s.substring(s.length-80) : s
+		}
+	},
+
 	created() {
 		let process = getRunningProcess();
+		let etaCalc = new EtaCalculator();
 		process?.processes.forEach((p) => {
 			this.progressBars.push({
 				path: p.info.path,
@@ -29,8 +45,7 @@ export default defineComponent({
 		process?.waitForFinish().catch(() => {}).then(() => {
 			this.running = false;
 		})
-		process?.getStdOut()?.on('data', (chk) => {
-			let str = chk.toString('utf-8');
+		let parseLine = (str: string) => {
 			let data: any;
 			try {
 				data = JSON.parse(str);
@@ -38,8 +53,8 @@ export default defineComponent({
 				this.error += str;
 				return;
 			}
+			// console.log('received update', data);
 			if (data.message_type === 'summary') {
-				// console.log('received summary', data);
 				let keys: any = Object.keys(data);
 				let target: any = this.summary;
 				keys.forEach((key: any) => {
@@ -51,10 +66,20 @@ export default defineComponent({
 				})
 				this.summary = target;
 				this.progressBars[this.current].percent = 100;
+				this.eta = 0;
 				this.current += 1;
+				etaCalc = new EtaCalculator();
 			} else if (data.message_type === 'status') {
 				this.progress = data;
 				this.progressBars[this.current].percent = Math.floor((this.progress.percent_done || 0) * 100)
+				this.eta = etaCalc.update(data.percent_done)
+			}
+		}
+		process?.getStdOut()?.on('data', (chk) => {
+			let str: string = chk.toString('utf-8');
+			let lines = str.split('\n')
+			for (let line of lines) {
+				parseLine(line)
 			}
 		})
 		process?.getStdErr()?.on('data', (chk) => {
@@ -95,6 +120,13 @@ export default defineComponent({
 		>
 			{{ p.path }}: {{ p.percent }}%
 		</el-progress>
+		<small v-show="eta > 0">Estimated time until completion: {{ humanizeDuration(eta) }}</small>
+		<small v-show="fileProcessing">
+			Processing: {{ fileProcessing }} 
+		</small>
+		<small v-show="fileStoring">
+			Storing: {{ fileStoring }} 
+		</small>
 		<el-button
 			variant="danger"
 			@click="cancel"
@@ -121,3 +153,17 @@ export default defineComponent({
 		</el-descriptions>
 	</el-card>
 </template>
+
+<style scoped>
+small {
+	font-family: monospace;
+	/* white-space: pre-line; */
+	text-align: left;
+	font-size: 12px;
+	display: -webkit-box;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	-webkit-line-clamp: 1;
+	-webkit-box-orient: vertical;
+}
+</style>

@@ -95,8 +95,12 @@ export type BackupSummary = {
 export type BackupProcess = {
 	"message_type":"status",
 	"percent_done": number,
+	"current_files": string[],
 	"total_files": number,
-	"total_bytes": number
+	"total_bytes": number,
+	"seconds_elapsed": number,
+	"bytes_done": number,
+	"files_done": number
 }
 
 export async function backup(profile: UserProfile, paths: BackupInfo[]): Promise<BatchProcess> {

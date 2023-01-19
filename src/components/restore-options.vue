@@ -22,6 +22,9 @@ export default defineComponent({
 		path: {
 			type: String,
 			required: true
+		},
+		hasBackupCompleted: {
+			type: Boolean
 		}
 	},
 
@@ -36,7 +39,9 @@ export default defineComponent({
 	}),
 
 	computed: {
-		
+		canRestore(): boolean {
+			return !!this.targetPath
+		}
 	},
 
 	watch: {
@@ -104,7 +109,7 @@ export default defineComponent({
 </script>
 
 <template>
-	<el-button @click="open=true">Restore Options</el-button>
+	<el-button @click="open=true" :disabled="!hasBackupCompleted">Restore Options</el-button>
 	<el-dialog v-model="open" style="text-align: left">
 		<h2>Restore Options</h2>
 		<p>{{ path }}</p>
