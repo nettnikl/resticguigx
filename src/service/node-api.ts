@@ -38,7 +38,7 @@ export async function pathIsDirectory(path: string): Promise<boolean> {
 
 export async function checkForProcessRunning(binPath: string) {
 	let list = await psaux();
-	let restic = list.find(e => e.command.startsWith(binPath))
+	let restic = list.find(e => e.command && e.command.startsWith(binPath))
 	if (restic) {
 		console.log('process found', restic);
 		return true;

@@ -12,7 +12,7 @@ export default class EtaCalculator {
 		let total = elapsed/percent;
 		let end = this.start + total;
 		let rest = end - now;
-		console.log('update', { percent, rest, elapsed, total, end, list: this.percents })
+		// console.log('update', { percent, rest, elapsed, total, end, list: this.percents })
 		this.latest = end;
 		let percentRounded = Math.floor(percent*100);
 		if (percentRounded > this.lastPercent) {

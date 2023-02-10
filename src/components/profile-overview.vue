@@ -34,6 +34,7 @@ export default defineComponent({
 		working: false,
 		error: '',
 		accordion: '',
+		accordionFolders: '',
 		showProgress: false
 	}),
 
@@ -75,8 +76,10 @@ export default defineComponent({
 						this.profile.repoInfo.lastFullBackup = new Date().toJSON()
 					}
 				} finally {
-					let stats = await Repo.stats(this.profile.repoPath, this.profile.getSecret())
-					this.profile.repoStats = stats;
+					if (!info) {
+						let stats = await Repo.stats(this.profile.repoPath, this.profile.getSecret())
+						this.profile.repoStats = stats;
+					}
 					await this.saveProfile();
 				}
 			} catch (e: any) {
@@ -253,61 +256,60 @@ export default defineComponent({
 
 	
 
-	<el-collapse accordion v-model="accordion" v-loading="working" style="text-align: left;">
-		<el-collapse-item 
-			title="Folders"
+	<el-tabs  v-model="accordion" type="card" v-loading="working" style="text-align: left;">
+		<el-tab-pane
+			label="Folders"
 			name="paths"
 			v-show="hasFolders"
 		>
-			<el-card
-				v-for="info of profile.backupDirs"
-				:key="info.path"
-				shadow="never"
-				style="text-align: left; margin-bottom: 8px"
-			>
-				<template #header>
-					<div style="font-family: monospace; white-space: pre-line">{{ info.path }}</div>
-				</template>
-				<el-descriptions
-					direction="vertical"
-					size="small"
+			<el-collapse accordion v-model="accordionFolders" style="text-align: left;">
+				<el-collapse-item 
+					v-for="info of profile.backupDirs"
+					:key="info.path"
+					:title="info.path"
+					:name="info.path"
 				>
-					<el-descriptions-item label="Last Backup Started">{{ $filters.dateTime(info.lastBackupStart) || 'never' }}</el-descriptions-item>
-					<el-descriptions-item label="Last Backup Completed">{{ $filters.dateTime(info.lastBackupFinished) || 'never' }}</el-descriptions-item>
-					<el-descriptions-item label="Last Cleaned">{{ $filters.dateTime(info.lastCleanup) || 'never' }}</el-descriptions-item>
-				</el-descriptions>
-				<el-button @click="runBackup(info)" icon="Coin">Backup</el-button>
-				<el-button @click="runPrune(info)" icon="Files">Cleanup</el-button>
-				<el-popconfirm 
-					title="This will remove all data for this folder from the repository. Are you sure?"
-					width="225"
-					icon-color="#ff0000"
-					@confirm="removePath(info)"
-				>
-					<template #reference>
-						<el-button>Remove</el-button>
-					</template>
-				</el-popconfirm>
-				<restore-options-vue :profile="profile" :path="info.path" :hasBackupCompleted="!!info.lastBackupFinished" />
-			</el-card>
-		</el-collapse-item>
-		<el-collapse-item title="Add Folder to Backup" name="newPath">
+					<el-descriptions
+						direction="vertical"
+						size="small"
+					>
+						<el-descriptions-item label="Last Backup Started">{{ $filters.dateTime(info.lastBackupStart) || 'never' }}</el-descriptions-item>
+						<el-descriptions-item label="Last Backup Completed">{{ $filters.dateTime(info.lastBackupFinished) || 'never' }}</el-descriptions-item>
+						<el-descriptions-item label="Last Cleaned">{{ $filters.dateTime(info.lastCleanup) || 'never' }}</el-descriptions-item>
+					</el-descriptions>
+					<el-button @click="runBackup(info)" icon="Coin">Backup</el-button>
+					<el-button @click="runPrune(info)" icon="Files">Cleanup</el-button>
+					<el-popconfirm 
+						title="This will remove all data for this folder from the repository. Are you sure?"
+						width="225"
+						icon-color="#ff0000"
+						@confirm="removePath(info)"
+					>
+						<template #reference>
+							<el-button>Remove</el-button>
+						</template>
+					</el-popconfirm>
+					<restore-options-vue :profile="profile" :path="info.path" :hasBackupCompleted="!!info.lastBackupFinished" />
+				</el-collapse-item>
+			</el-collapse>
+		</el-tab-pane>
+		<el-tab-pane label="Add Folder to Backup" name="newPath">
 			<backup-new-vue @created="e => added(e)" />
-		</el-collapse-item>
-		<el-collapse-item title="Prune Settings" name="pruneSettings">
+		</el-tab-pane>
+		<el-tab-pane label="Prune Settings" name="pruneSettings">
 			<prune-settings-vue :profile="profile" @save="updatePruneSettings" />
-		</el-collapse-item>
-		<el-collapse-item title="Exclude Settings" name="excludeSettings">
+		</el-tab-pane>
+		<el-tab-pane label="Exclude Settings" name="excludeSettings">
 			<exclude-settings-vue :profile="profile" @save="updateExcludeSettings" />
-		</el-collapse-item>
-		<el-collapse-item title="Unlock" name="unlock">
+		</el-tab-pane>
+		<el-tab-pane label="Unlock" name="unlock">
 			<el-alert type="info" show-icon :closable="false">
 				Sometimes the repository will not be closed properly and you get an error saying it is locked.
 				<br/>If that happens, you can manually send the unlock command here.
 			</el-alert>
 			<el-button @click="unlock" variant="notice">Unlock</el-button>
-		</el-collapse-item>
-	</el-collapse>
+		</el-tab-pane>
+	</el-tabs>
 </el-card>
 	
 </template>

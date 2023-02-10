@@ -29,7 +29,7 @@ export default defineComponent({
 		fileProcessing() {
 			let a = this.progress?.current_files || []
 			let s = (a.length > 1 ? a[1] : '');
-			return s.length > 81 ? '…'+s.substring(s.length-80) : s
+			return s.length > 87 ? '…'+s.substring(s.length-86) : s
 		}
 	},
 
@@ -121,10 +121,10 @@ export default defineComponent({
 			{{ p.path }}: {{ p.percent }}%
 		</el-progress>
 		<small v-show="eta > 0">Estimated time until completion: {{ humanizeDuration(eta) }}</small>
-		<small v-show="fileProcessing">
+		<small v-show="eta > 0">
 			Processing: {{ fileProcessing }} 
 		</small>
-		<small v-show="fileStoring">
+		<small v-show="eta > 0">
 			Storing: {{ fileStoring }} 
 		</small>
 		<el-button
