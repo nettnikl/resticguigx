@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, dialog, Menu, MenuItem } from 'electron'
 import { release } from 'node:os'
 import { join } from 'node:path'
 
@@ -52,7 +52,24 @@ async function createWindow() {
 			nodeIntegration: true,
 			contextIsolation: false,
 		},
+		width: 960,
+		height: 800
 	})
+
+	const menu = new Menu();
+	menu.append(new MenuItem({
+		label: 'Profile List',
+		click() {
+			win.webContents.send('navigate', '/home')
+		}
+	}))
+	menu.append(new MenuItem({
+		label: 'About',
+		click() {
+			win.webContents.send('navigate', '/about')
+		}
+	}))
+	Menu.setApplicationMenu(menu);
 
 	if (process.env.VITE_DEV_SERVER_URL) { // electron-vite-vue#298
 		win.loadURL(url)
@@ -116,7 +133,8 @@ ipcMain.handle('open-win', (_, arg) => {
 })
 
 ipcMain.handle('select-dirs', async (event, arg) => {
-	const properties: ("openDirectory" | "openFile" | "multiSelections" | "showHiddenFiles" | "createDirectory" | "promptToCreate" | "noResolveAliases" | "treatPackageAsDirectory" | "dontAddToRecent")[] = ['openDirectory'];
+	const properties: ("openDirectory" | "openFile" | "multiSelections" | "showHiddenFiles" | "createDirectory" | "promptToCreate" | "noResolveAliases" | "treatPackageAsDirectory" | "dontAddToRecent")[] 
+		= ['openDirectory', 'createDirectory'];
 	if (arg && arg.multiple) {
 		properties.push('multiSelections')
 	}

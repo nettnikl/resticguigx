@@ -14,9 +14,10 @@ export default defineComponent({
 		progress: {} as Partial<BackupProcess>,
 		summary: {} as Partial<BackupSummary>,
 		eta: 0,
-		error: '',
+		errors: [] as string[],
 		progressBars: [] as { path: string, percent: number }[],
 		current: 0,
+		timer: null as any,
 		running: true
 	}),
 
@@ -33,6 +34,10 @@ export default defineComponent({
 		}
 	},
 
+	beforeUnmount() {
+		clearInterval(this.timer)
+	},
+
 	created() {
 		let process = getRunningProcess();
 		let etaCalc = new EtaCalculator();
@@ -44,13 +49,16 @@ export default defineComponent({
 		});
 		process?.waitForFinish().catch(() => {}).then(() => {
 			this.running = false;
+			clearInterval(this.timer)
 		})
+		let lastProgress;
 		let parseLine = (str: string) => {
 			let data: any;
 			try {
 				data = JSON.parse(str);
 			} catch (e) {
-				this.error += str;
+				// console.error(e);
+				// this.error += str;
 				return;
 			}
 			// console.log('received update', data);
@@ -58,7 +66,7 @@ export default defineComponent({
 				let keys: any = Object.keys(data);
 				let target: any = this.summary;
 				keys.forEach((key: any) => {
-					if (key in target) {
+					if (typeof target[key] === 'number') {
 						target[key] += data[key]
 					} else {
 						target[key] = data[key]
@@ -70,9 +78,10 @@ export default defineComponent({
 				this.current += 1;
 				etaCalc = new EtaCalculator();
 			} else if (data.message_type === 'status') {
-				this.progress = data;
-				this.progressBars[this.current].percent = Math.floor((this.progress.percent_done || 0) * 100)
-				this.eta = etaCalc.update(data.percent_done)
+				lastProgress = data;
+				// this.progress = data;
+				// this.progressBars[this.current].percent = Math.floor((this.progress.percent_done || 0) * 100)
+				// this.eta = etaCalc.update(data.percent_done)
 			}
 		}
 		process?.getStdOut()?.on('data', (chk) => {
@@ -83,8 +92,14 @@ export default defineComponent({
 			}
 		})
 		process?.getStdErr()?.on('data', (chk) => {
-			this.error += chk.toString('utf8');
+			// this.error += chk.toString('utf8');
 		})
+		this.timer = setInterval(() => {
+			if (!lastProgress) return;
+			this.progress = lastProgress;
+			this.progressBars[this.current].percent = Math.floor((this.progress.percent_done || 0) * 100)
+			this.eta = etaCalc.update(lastProgress.percent_done)
+		}, 750)
 	},
 
 	methods: {
@@ -108,7 +123,7 @@ export default defineComponent({
 <template>
 	<el-card>
 		<template #header>Backup in Progress</template>
-		<el-alert :title="error" type="error" v-if="error" />
+		
 		<el-progress
 			v-for="(p) of progressBars"
 			:key="p.path"

@@ -3,7 +3,7 @@ export default class EtaCalculator {
 
 	start = Date.now()
 	lastPercent = -1
-	percents: number[] = []
+	// percents: number[] = []
 	latest = 0
 
 	update(percent: number): number {
@@ -16,7 +16,7 @@ export default class EtaCalculator {
 		this.latest = end;
 		let percentRounded = Math.floor(percent*100);
 		if (percentRounded > this.lastPercent) {
-			this.percents.push(~~end);
+			// this.percents.push(~~end);
 			this.lastPercent = percentRounded;
 		}
 		return rest;

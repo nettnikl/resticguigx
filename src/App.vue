@@ -4,16 +4,9 @@ import { RouterLink, RouterView } from 'vue-router'
 
 <template>
 
-	<nav>
-		<RouterLink to="/">Profile List</RouterLink>
-		<RouterLink to="/about">About</RouterLink>
-	</nav>
 	<main>
 		<RouterView />
 	</main>
-	<footer>
-		
-	</footer>
 </template>
 
 <style scoped>
