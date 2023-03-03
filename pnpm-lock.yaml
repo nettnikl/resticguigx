@@ -4,6 +4,7 @@ specifiers:
   '@element-plus/icons-vue': ^2.0.10
   '@types/decompress': ^4.2.4
   '@vitejs/plugin-vue': ^4.0.0
+  du: ^1.0.0
   electron: ^22.0.0
   electron-builder: ^23.6.0
   element-plus: ^2.2.28
@@ -20,6 +21,7 @@ specifiers:
 
 dependencies:
   '@element-plus/icons-vue': 2.0.10_vue@3.2.45
+  du: 1.0.0
   element-plus: 2.2.28_vue@3.2.45
   filesize: 10.0.6
   humanize-duration: 3.27.3
@@ -1130,6 +1132,13 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
+  /du/1.0.0:
+    resolution: {integrity: sha512-w00+6XpIq924IvDLyOOx5HFO4KwH6YV6buqFx6og/ErTaJ34kVOyI+Q2f+X8pvZkDoEgT6xspA4iYSN99mqPDA==}
+    hasBin: true
+    dependencies:
+      map-async: 0.1.1
+    dev: false
+
   /ejs/3.1.8:
     resolution: {integrity: sha512-/sXZeMlhS0ArkfX2Aw780gJzXSMPnKjtspYZv+f3NiKLlubezAHDU5+9xz6gd3/NhG3txQCo6xlglmTS+oTGEQ==}
     engines: {node: '>=0.10.0'}
@@ -1740,6 +1749,10 @@ packages:
     resolution: {integrity: sha512-RmF0AsMzgt25qzqqLc1+MbHmhdx0ojF2Fvs4XnOqz2ZOBXzzkEwc/dJQZCYHAn7v1jbVOjAZfK8msRn4BxO4VQ==}
     dependencies:
       sourcemap-codec: 1.4.8
+
+  /map-async/0.1.1:
+    resolution: {integrity: sha512-nim726/DRF1yuTrx3qNJcFNqJCgiFD98eh/49EdI5LWTspX4whkVvT0hOcMEVJWCijKkp519vCY1uD05Hklc6w==}
+    dev: false
 
   /matcher/3.0.0:
     resolution: {integrity: sha512-OkeDaAZ/bQCxeFAozM55PKcKU0yJMPGifLwV4Qgjitu+5MoAfSQN4lsLJeXZ1b8w0x+/Emda6MZgXS1jvsapng==}

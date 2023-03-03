@@ -1,3 +1,4 @@
+import du from 'du';
 import type { StatsResult } from './types'
 import child_process from 'child_process'
 import Path from 'node:path'
@@ -64,7 +65,14 @@ export async function stats(repoDir: string, password: string): Promise<StatsRes
 		RESTIC_PASSWORD: password
 	})
 	console.log('stats output', res);
-	return JSON.parse(res.stdout)
+	let stats = JSON.parse(res.stdout)
+	stats.total_size = await getFolderSize(repoDir);
+	return stats;
+}
+
+export async function getFolderSize(repoDir: string): Promise<number> {
+	let res = await du(repoDir)
+	return res;
 }
 
 let runningProcess: BatchProcess|null = null;

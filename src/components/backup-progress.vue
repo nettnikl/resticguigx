@@ -4,6 +4,7 @@ import { getRunningProcess, BackupProcess, BackupSummary } from '../service/repo
 import humanizeDuration from 'humanize-duration'
 import { filesize } from "filesize";
 import EtaCalculator from '../service/model/eta'
+import { resizePath } from '../service/paths'
 
 export default defineComponent({
 	name: 'BackupProgress',
@@ -25,12 +26,12 @@ export default defineComponent({
 		fileStoring(): string {
 			let a = this.progress?.current_files || []
 			let s = (a.length > 0 ? a[0] : '');
-			return s.length > 90 ? '…'+s.substring(s.length-89) : s
+			return resizePath(s, 97);
 		},
 		fileProcessing() {
 			let a = this.progress?.current_files || []
 			let s = (a.length > 1 ? a[1] : '');
-			return s.length > 87 ? '…'+s.substring(s.length-86) : s
+			return resizePath(s, 97);
 		}
 	},
 
@@ -124,24 +125,50 @@ export default defineComponent({
 	<el-card>
 		<template #header>Backup in Progress</template>
 		
-		<el-progress
-			v-for="(p) of progressBars"
-			:key="p.path"
-			:text-inside="true"
-			:percentage="p.percent"
-			type="line"
-			:stroke-width="20"
-			style="margin-bottom: 10px"
-		>
-			{{ p.path }}: {{ p.percent }}%
-		</el-progress>
-		<small v-show="eta > 0">Estimated time until completion: {{ humanizeDuration(eta) }}</small>
-		<small v-show="eta > 0">
-			Processing: {{ fileProcessing }} 
-		</small>
-		<small v-show="eta > 0">
-			Storing: {{ fileStoring }} 
-		</small>
+		<template v-if="progressBars.length > 4">
+			<el-progress
+				:text-inside="true"
+				:percentage="current/progressBars.length * 100"
+				type="line"
+				:stroke-width="20"
+				style="margin-bottom: 10px"
+			>
+				Backup Folders complete: {{ current }} / {{ progressBars.length }}
+			</el-progress>
+
+			<el-progress
+				:text-inside="true"
+				:percentage="progressBars[current].percent"
+				type="line"
+				:stroke-width="20"
+				style="margin-bottom: 10px"
+			>
+				{{ progressBars[current].path }}: {{ progressBars[current].percent }}%
+			</el-progress>
+		</template>
+		<template v-else>
+			<el-progress
+				v-for="(p) of progressBars"
+				:key="p.path"
+				:text-inside="true"
+				:percentage="p.percent"
+				type="line"
+				:stroke-width="20"
+				style="margin-bottom: 10px"
+			>
+				{{ p.path }}: {{ p.percent }}%
+			</el-progress>
+		</template>
+		<template v-if="eta > 0">
+			<small>Estimated time until completion: {{ humanizeDuration(eta) }}</small>
+			<span>Processing / Storing:</span>
+			<small>
+				{{ fileProcessing }} 
+			</small>
+			<small>
+				{{ fileStoring }} 
+			</small>
+		</template>
 		<el-button
 			variant="danger"
 			@click="cancel"
