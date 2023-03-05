@@ -5,6 +5,13 @@ import humanizeDuration from 'humanize-duration'
 import { filesize } from "filesize";
 import EtaCalculator from '../service/model/eta'
 import { resizePath } from '../service/paths'
+import { ElAlert, TableColumnCtx } from 'element-plus';
+
+type LogEntry = {
+	message: string,
+	type: string,
+	time: Date
+}
 
 export default defineComponent({
 	name: 'BackupProgress',
@@ -15,7 +22,18 @@ export default defineComponent({
 		progress: {} as Partial<BackupProcess>,
 		summary: {} as Partial<BackupSummary>,
 		eta: 0,
-		errors: [] as string[],
+		logEntries: [] as LogEntry[],
+		logCols: [{
+			title: 'Time',
+			key: 'time',
+			dataKey: 'time',
+			cellRenderer: ({ cellData: data }) => data.toLocaleTimeString()
+		}, {
+			title: 'Message',
+			key: 'message',
+			dataKey: 'message',
+			cellRenderer: ({ cellData: message }) => message
+		}],
 		progressBars: [] as { path: string, percent: number }[],
 		current: 0,
 		timer: null as any,
@@ -57,9 +75,14 @@ export default defineComponent({
 			let data: any;
 			try {
 				data = JSON.parse(str);
-			} catch (e) {
-				// console.error(e);
-				// this.error += str;
+			} catch (e: any) {
+				// if (e.message.includes('Unexpected end of JSON input')) return;
+				if (!str || !str.trim().length) return;
+				this.logEntries.unshift({
+					message: str,
+					type: 'error',
+					time: new Date()
+				})
 				return;
 			}
 			// console.log('received update', data);
@@ -76,6 +99,11 @@ export default defineComponent({
 				this.summary = target;
 				this.progressBars[this.current].percent = 100;
 				this.eta = 0;
+				this.logEntries.unshift({
+					message: 'Completed Backup of: '+this.progressBars[this.current].path,
+					type: 'success',
+					time: new Date()
+				})
 				this.current += 1;
 				etaCalc = new EtaCalculator();
 			} else if (data.message_type === 'status') {
@@ -93,11 +121,17 @@ export default defineComponent({
 			}
 		})
 		process?.getStdErr()?.on('data', (chk) => {
-			// this.error += chk.toString('utf8');
+			console.log('got stdErr', chk.toString('utf8'));
+			this.logEntries.unshift({
+				message: chk.toString('utf8'),
+				type: 'error',
+				time: new Date()
+			})
 		})
 		this.timer = setInterval(() => {
 			if (!lastProgress) return;
 			this.progress = lastProgress;
+			if (!this.progressBars[this.current]) return;
 			this.progressBars[this.current].percent = Math.floor((this.progress.percent_done || 0) * 100)
 			this.eta = etaCalc.update(lastProgress.percent_done)
 		}, 750)
@@ -114,7 +148,10 @@ export default defineComponent({
 			let process = getRunningProcess();
 			if (!process || !process.isRunning()) return;
 			process.stop()
-		}
+		},
+		getLogRowClass(info) {
+			return info.rowData.type;
+		},
 	}
 
 	
@@ -176,6 +213,14 @@ export default defineComponent({
 		>
 			Cancel 
 		</el-button>
+		<el-table-v2 
+			v-if="logEntries.length > 0"
+			:data="logEntries"
+			:columns="logCols"
+			:width="700"
+			:height="260"
+			:row-class="getLogRowClass"
+		/>
 		<el-descriptions
 			title="Summary"
 			v-show="!!summary.snapshot_id"
@@ -208,4 +253,5 @@ small {
 	-webkit-line-clamp: 1;
 	-webkit-box-orient: vertical;
 }
+
 </style>

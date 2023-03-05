@@ -33,7 +33,7 @@ export default defineComponent({
 	data: () => ({
 		working: false,
 		error: '',
-		accordion: '',
+		accordion: 'paths',
 		accordionFolders: '',
 		showProgress: false
 	}),

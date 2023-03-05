@@ -126,3 +126,10 @@ html.dark .card-light {
 .el-alert {
     border-radius: 6px;
 }
+
+.el-table-v2__main .success {
+	background: #040;
+}
+.el-table-v2__main .error {
+	background: #600;
+}
