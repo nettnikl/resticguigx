@@ -12,7 +12,7 @@ import { openFolder, checkForProcessRunning } from './node-api'
 const binPath = process.env.NODE_ENV === 'development' 
 	? Path.join(process.cwd(), 'bin', 'linux', 'restic') 
 	: Path.join(process.resourcesPath!, 'bin', os.platform() === 'win32' ? 'restic.exe' : 'restic');
-console.log(binPath)
+const processEnv = process.env;
 type Output = { stdout: string, stderr: string }
 
 function exec(args: string[], env: Record<string, string>): Promise<Output> {
@@ -35,38 +35,44 @@ function exec(args: string[], env: Record<string, string>): Promise<Output> {
 	})
 }
 
-export async function assertRepoExists(repoDir: string, password: string): Promise<Snapshot[]> {
+export async function assertRepoExists(repoDir: string, password: string, repoEnv: Record<string, string>): Promise<Snapshot[]> {
 	try {
-		let res = await getSnapshots(repoDir, password);
+		let res = await getSnapshots(repoDir, password, repoEnv);
 		return res;
 	} catch (e) {
-		await initRepo(repoDir, password);
+		await initRepo(repoDir, password, repoEnv);
 		return []
 	}
 }
 
-export async function initRepo(repoDir: string, password: string) {
+export async function initRepo(repoDir: string, password: string, repoEnv: Record<string, string>) {
 	let res = await exec([
 		'init',
 		'--json',
 		`-r=${repoDir}`
 	], {
+		...processEnv,
+		...repoEnv,
 		RESTIC_PASSWORD: password
 	})
 	return res.stdout;
 }
 
-export async function stats(repoDir: string, password: string): Promise<StatsResult> {
+export async function stats(profile: UserProfile): Promise<StatsResult> {
 	let res = await exec([
 		'stats',
 		'--json',
-		`-r=${repoDir}`
+		`-r=${profile.getRepoPath()}`
 	], {
-		RESTIC_PASSWORD: password
+		...processEnv,
+		...profile.getRepoEnv(),
+		RESTIC_PASSWORD: profile.getSecret()
 	})
 	console.log('stats output', res);
 	let stats = JSON.parse(res.stdout)
-	stats.total_size = await getFolderSize(repoDir);
+	if (profile.isLocalRepo()) {
+		stats.total_size = await getFolderSize(profile.getRepoPath());
+	}
 	return stats;
 }
 
@@ -137,6 +143,8 @@ export async function backup(profile: UserProfile, paths: BackupInfo[]): Promise
 			`${info.path}`
 		]);
 		let process = new Process(binPath, params, {
+			...processEnv,
+			...profile.getRepoEnv(),
 			RESTIC_PASSWORD: profile.getSecret()
 		}, info)
 		processes.push(process);
@@ -233,6 +241,8 @@ export async function forget(profile: UserProfile, settings: Partial<PruneSettin
 	}
 	// console.log(params, keep);
 	let res = await exec(params, {
+		...process.env,
+		...profile.getRepoEnv(),
 		RESTIC_PASSWORD: profile.getSecret()
 	});
 	console.log('forget output', res);
@@ -243,12 +253,14 @@ export async function forget(profile: UserProfile, settings: Partial<PruneSettin
 	return firstLine[0] === '[' ? JSON.parse(firstLine) : []
 }
 
-export async function getSnapshots(repoDir: string, password: string): Promise<Snapshot[]> {
+export async function getSnapshots(repoDir: string, password: string, repoEnv: Record<string, string>): Promise<Snapshot[]> {
 	let res = await exec([
 		'snapshots',
 		`-r=${repoDir}`,
 		'--json'
 	], {
+		...processEnv,
+		...repoEnv,
 		RESTIC_PASSWORD: password
 	});
 	console.log('snapshots output', res);
@@ -278,6 +290,8 @@ export async function mount(profile: UserProfile, path: string): Promise<Process
 			`-r=${profile.repoPath}`,
 			mountBasePath
 		], {
+			...processEnv,
+			...profile.getRepoEnv(),
 			RESTIC_PASSWORD: profile.getSecret()
 		}, { path });
 		currentMount = process;
@@ -312,6 +326,8 @@ export async function restore(profile: UserProfile, path: string, targetPath: st
 		'latest'
 	]
 	let process = new Process(binPath, params, {
+		...processEnv,
+		...profile.getRepoEnv(),
 		RESTIC_PASSWORD: profile.getSecret()
 	}, { path })
 	process.start();

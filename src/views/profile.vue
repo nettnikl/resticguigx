@@ -42,34 +42,33 @@ export default defineComponent({
 				await this.tryLoadRepo();
 			}
 		} catch(e: any) {
-			this.error += e.message
+			this.error = e.message
 		}
 		
 	},
 
 	methods: {
 		async savePassword() {
-			let okay = await this.tryLoadRepo();
-			if (okay) {
+			await this.tryLoadRepo();
+			if (this.canAccess) {
 				this.profile!.setSecret(this.password);
 				this.password = '';
-			} else {
-				this.error = 'unable to load repo at "'+this.profile!.repoPath+'" with given password'
 			}
 		},
-		async tryLoadRepo(): Promise<boolean> {
+		async tryLoadRepo() {
 			let profile: UserProfile = this.profile!;
 			let pw = this.password || profile.getSecret()
 			let repo = profile.repoPath;
+			let env = profile.getRepoEnv();
 			if (!pw || !repo || !profile) return false;
 			this.working = true;
 			try {
-				let res = await Repo.getSnapshots(repo, pw)
-				await this.profile!.setPathsFromSnapshots(res)
+				let res = await Repo.getSnapshots(repo, pw, env);
+				// await this.profile!.setPathsFromSnapshots(res)
 				this.canAccess = true;
-				return true;
 			} catch (e) {
-				return false;
+				this.canAccess = false;
+				this.error = 'unable to load repo at "'+this.profile!.getRepoPath()+'" with given password'
 			} finally {
 				this.working = false;
 			}
@@ -83,7 +82,7 @@ export default defineComponent({
 	<h2>Profile: {{ profileName }}</h2>
 	<el-alert :title="error" type="error" v-if="error" />
 	<el-card
-		v-show="!showPasswordInput && !canAccess"
+		v-show="!showPasswordInput && !canAccess && working"
 		v-loading="working"
 	>
 		<p>Loading...</p>

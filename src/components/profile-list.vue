@@ -15,7 +15,7 @@ export default defineComponent({
 	data: () => ({
 		list: [] as string[],
 		newName: '',
-		collapse: '',
+		collapse: 'new',
 		working: false
 	}),
 
@@ -69,7 +69,7 @@ export default defineComponent({
 			</template>
 		</el-popconfirm>
 	</el-card>
-	<el-collapse class="el-card" style="padding: 0 2rem;" v-model="collapse">
+	<el-collapse class="el-card" style="padding: 0 2rem; margin: 2em 0;" v-model="collapse">
 		<el-collapse-item title="New Profile" name="new">
 			<profile-new-vue @created="e => select(e)" />
 		</el-collapse-item>

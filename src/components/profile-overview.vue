@@ -11,6 +11,7 @@ import { filesize } from "filesize";
 import { error } from 'console';
 import { ElDescriptions, ElDescriptionsItem, ElAlert, ElButton, ElButtonGroup, ElCard, ElCollapse, ElCollapseItem, ElMessage } from 'element-plus';
 import restoreOptionsVue from './restore-options.vue';
+import { setWorking } from '../service/node-api';
 
 export default defineComponent({
 	name: 'ProfileOverview',
@@ -37,6 +38,13 @@ export default defineComponent({
 		accordionFolders: '',
 		showProgress: false
 	}),
+
+	watch: {
+		working(nv, ov) {
+			if (nv === ov) return;
+			setWorking(nv);
+		}
+	},
 
 	computed: {
 		canPrune() {
@@ -77,7 +85,7 @@ export default defineComponent({
 					}
 				} finally {
 					if (!info) {
-						let stats = await Repo.stats(this.profile.repoPath, this.profile.getSecret())
+						let stats = await Repo.stats(this.profile)
 						this.profile.repoStats = stats;
 					}
 					await this.saveProfile();
@@ -109,7 +117,7 @@ export default defineComponent({
 		async updateStats() {
 			this.working = true;
 			try {
-				let stats = await Repo.stats(this.profile.repoPath, this.profile.getSecret())
+				let stats = await Repo.stats(this.profile)
 				this.profile.repoStats = stats;
 				await this.saveProfile();
 			} catch (e: any) {
@@ -139,7 +147,7 @@ export default defineComponent({
 						type: 'success'
 					})
 				}
-				let stats = await Repo.stats(this.profile.repoPath, this.profile.getSecret())
+				let stats = await Repo.stats(this.profile)
 				this.profile.repoStats = stats;
 				let idx = this.profile.backupDirs.findIndex(e => e === info);
 				this.profile.backupDirs.splice(idx, 1);
@@ -190,7 +198,7 @@ export default defineComponent({
 					message: 'Cleanup complete. Kept: '+kept+', cleaned: '+removed+' over '+targets.length+' path(s)',
 					type: 'success'
 				})
-				let stats = await Repo.stats(this.profile.repoPath, this.profile.getSecret())
+				let stats = await Repo.stats(this.profile)
 				this.profile.repoStats = stats;
 				await this.saveProfile();
 			} catch (e: any) {
@@ -310,6 +318,6 @@ export default defineComponent({
 			<el-button @click="unlock" variant="notice">Unlock</el-button>
 		</el-tab-pane>
 	</el-tabs>
-</el-card>
+	</el-card>
 	
 </template>

@@ -5,7 +5,6 @@ import humanizeDuration from 'humanize-duration'
 import { filesize } from "filesize";
 import EtaCalculator from '../service/model/eta'
 import { resizePath } from '../service/paths'
-import { ElAlert, TableColumnCtx } from 'element-plus';
 
 type LogEntry = {
 	message: string,
@@ -159,8 +158,8 @@ export default defineComponent({
 </script>
 
 <template>
-	<el-card>
-		<template #header>Backup in Progress</template>
+	<div>
+		<h2>Backup in Progress</h2>
 		
 		<template v-if="progressBars.length > 4">
 			<el-progress
@@ -217,7 +216,7 @@ export default defineComponent({
 			v-if="logEntries.length > 0"
 			:data="logEntries"
 			:columns="logCols"
-			:width="700"
+			:width="750"
 			:height="260"
 			:row-class="getLogRowClass"
 		/>
@@ -238,7 +237,7 @@ export default defineComponent({
 			<el-descriptions-item label="Total Files Processed">{{ summary.total_files_processed }}</el-descriptions-item>
 			<el-descriptions-item label="Total Size Processed">{{ filesize(summary.total_bytes_processed || 0) }}</el-descriptions-item>
 		</el-descriptions>
-	</el-card>
+	</div>
 </template>
 
 <style scoped>

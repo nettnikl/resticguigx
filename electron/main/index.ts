@@ -2,21 +2,12 @@ import { app, BrowserWindow, shell, ipcMain, dialog, Menu, MenuItem } from 'elec
 import { release } from 'node:os'
 import { join } from 'node:path'
 
-// The built directory structure
-//
-// ├─┬ dist-electron
-// │ ├─┬ main
-// │ │ └── index.js    > Electron-Main
-// │ └─┬ preload
-// │   └── index.js    > Preload-Scripts
-// ├─┬ dist
-// │ └── index.html    > Electron-Renderer
-//
 process.env.DIST_ELECTRON = join(__dirname, '..')
 process.env.DIST = join(process.env.DIST_ELECTRON, '../dist')
 process.env.PUBLIC = process.env.VITE_DEV_SERVER_URL
 	? join(process.env.DIST_ELECTRON, '../public')
 	: process.env.DIST
+const dev = !!process.env.VITE_DEV_SERVER_URL;
 
 // Disable GPU Acceleration for Windows 7
 if (release().startsWith('6.1')) app.disableHardwareAcceleration()
@@ -29,13 +20,9 @@ if (!app.requestSingleInstanceLock()) {
 	process.exit(0)
 }
 
-// Remove electron security warnings
-// This warning only shows in development mode
-// Read more on https://www.electronjs.org/docs/latest/tutorial/security
-// process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
+let resticWorking = false;
 
 let win: BrowserWindow | null = null
-// Here, you can also use other preload
 const preload = join(__dirname, '../preload/index.js')
 const url = process.env.VITE_DEV_SERVER_URL
 const indexHtml = join(process.env.DIST, 'index.html')
@@ -46,9 +33,6 @@ async function createWindow() {
 		icon: join(process.env.PUBLIC, 'favicon.ico'),
 		webPreferences: {
 			preload,
-			// Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
-			// Consider using contextBridge.exposeInMainWorld
-			// Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
 			nodeIntegration: true,
 			contextIsolation: false,
 		},
@@ -58,17 +42,38 @@ async function createWindow() {
 
 	const menu = new Menu();
 	menu.append(new MenuItem({
-		label: 'Profile List',
-		click() {
-			win.webContents.send('navigate', '/home')
-		}
+		id: 'main-menu',
+		label: 'Restic',
+		enabled: true,
+		submenu: [
+			{
+				label: 'Profile List',
+				click() {
+					win.webContents.send('navigate', '/home')
+				}
+			},
+			{
+				label: 'About',
+				click() {
+					win.webContents.send('navigate', '/about')
+				}
+			},
+			{
+				label: 'Quit',
+				click() {
+					app.exit(0);
+				}
+			}
+		]
 	}))
-	menu.append(new MenuItem({
-		label: 'About',
-		click() {
-			win.webContents.send('navigate', '/about')
-		}
-	}))
+	if (dev) {
+		menu.append(new MenuItem({
+			label: 'Reload',
+			click() {
+				win.reload()
+			}
+		}))
+	}
 	Menu.setApplicationMenu(menu);
 
 	if (process.env.VITE_DEV_SERVER_URL) { // electron-vite-vue#298
@@ -88,6 +93,15 @@ async function createWindow() {
 	win.webContents.setWindowOpenHandler(({ url }) => {
 		if (url.startsWith('https:')) shell.openExternal(url)
 		return { action: 'deny' }
+	})
+
+	win.on('close', (event) => {
+		if(resticWorking){
+			event.preventDefault();
+			win.minimize();
+		}
+	
+		return false;
 	})
 }
 
@@ -141,7 +155,7 @@ ipcMain.handle('select-dirs', async (event, arg) => {
 	const result = await dialog.showOpenDialog(win, {
 		properties
 	})
-	console.log('directories selected', result.filePaths)
+	// console.log('directories selected', result.filePaths)
 	return result;
 })
 
@@ -154,4 +168,12 @@ ipcMain.on('open-folder', async(event, fullPath: string) => {
 })
 ipcMain.on('open-url', async(event, url: string) => {
 	await shell.openExternal(url)
+})
+
+ipcMain.on('set-working', (event, workingState) => {
+	resticWorking = workingState;
+	//disabling the dropdown does not work
+	Menu.getApplicationMenu().getMenuItemById('main-menu').submenu.items.forEach(item => {
+		item.enabled = !resticWorking;
+	});
 })

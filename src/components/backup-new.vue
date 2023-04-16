@@ -28,6 +28,6 @@ export default defineComponent({
 </script>
 
 <template>
-	<p>Select new folders to back up</p>
+	<p>Select folders to back up</p>
 	<el-button @click="selectDir" type="primary" icon="CirclePlusFilled">Select Folder</el-button>
 </template>

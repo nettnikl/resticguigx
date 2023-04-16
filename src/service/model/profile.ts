@@ -36,6 +36,7 @@ export default class UserProfile {
 
 	profileName: string
 	repoPath: string = ''
+	repoEnv: Record<string, string> = {}
 	repoStats: Partial<StatsResult> = {}
 	repoInfo: Partial<RepoInfo> = {}
 	backupDirs: BackupInfo[] = []
@@ -99,6 +100,18 @@ export default class UserProfile {
 				this.backupDirs.push({ path: p, lastBackupFinished: lastStamp })
 			}
 		}
+	}
+
+	getRepoEnv(): Record<string, string> {
+		return this.repoEnv || {};
+	}
+
+	getRepoPath(): string {
+		return this.repoPath;
+	}
+
+	isLocalRepo(): boolean {
+		return this.repoPath.startsWith('/');
 	}
 
 }

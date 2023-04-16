@@ -30,6 +30,10 @@ export async function openLink(url: string) {
 	await ipcRenderer.send('open-url', url)
 }
 
+export async function setWorking(working: boolean) {
+	await ipcRenderer.send('set-working', working)
+}
+
 export async function pathIsDirectory(path: string): Promise<boolean> {
 	try {
 		let stat = await fs.stat(path);

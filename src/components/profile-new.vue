@@ -3,10 +3,16 @@ import { defineComponent } from 'vue';
 import * as Repo from '../service/repo';
 import { createProfile, saveProfile } from '../service/user-storage'
 import { selectDirectory } from '../service/node-api'
-import UserProfile from '../service/model/profile';
+import UserProfile, { BackupInfo } from '../service/model/profile';
+import backupNewVue from './backup-new.vue';
 
 export default defineComponent({
 	name: 'ProfilNew',
+
+
+	components: {
+		backupNewVue
+	},
 
 	emits: ['created'],
 
@@ -14,8 +20,10 @@ export default defineComponent({
 		formData: {
 			newName: '',
 			repoSelect: '',
-			repoType: 'local',
+			repoType: 'default',
 			repoRaw: '',
+			repoEnv: '',
+			backupDirs: [] as BackupInfo[],
 			password: '',
 			passStrat: UserProfile.PW_STRAT_ASK
 		},
@@ -53,15 +61,21 @@ export default defineComponent({
 				let res = await form.validate();
 				if (!res) return;
 
-				let repoDir = this.formData.repoRaw;
-				if (this.formData.repoType === 'local') {
+				let repoDir = '';
+				let repoEnv = {};
+				if (this.formData.repoType === 'default') {
 					repoDir = this.formData.repoSelect;
+				} else {
+					repoDir = this.formData.repoRaw;
+					repoEnv = this.getEnvFromText(this.formData.repoEnv);
 				}
-				let snapshots = await Repo.assertRepoExists(repoDir, this.formData.password);
+				let snapshots = await Repo.assertRepoExists(repoDir, this.formData.password, repoEnv);
 				let model = await createProfile(this.formData.newName);
 				model.repoPath = repoDir;
 				model.passwordStrategy = this.formData.passStrat;
 				model.setSecret(this.formData.password);
+				model.repoEnv = repoEnv;
+				model.backupDirs = this.formData.backupDirs;
 				await model.setPathsFromSnapshots(snapshots);
 				model.pruneSettings = {
 					keepMonthly: 6
@@ -81,6 +95,32 @@ export default defineComponent({
 			if (res.canceled) return;
 			this.formData.repoSelect = res.filePaths[0];
 			console.log('select result', res);
+		},
+		getEnvFromText(text: string) {
+			let lines = text.split('\n');
+			let r = {};
+			for (let line of lines) {
+				let [key, value] = line.split('=')
+				if (key && value) {
+					r[key] = value
+				}
+			}
+			return r;
+		},
+		added(path: string) {
+			let exists = this.formData.backupDirs.find(e => e.path === path);
+			if (exists) {
+				return;
+			} else {
+				this.formData.backupDirs.push({ path })
+			}
+		},
+		async selectSourceDir() {
+			let res = await selectDirectory(true);
+			if (res.canceled) return;
+			for (let path of res.filePaths) {
+				this.added(path);
+			}
 		}
 	}
 
@@ -95,21 +135,40 @@ export default defineComponent({
 		:model="formData"
 		ref="form"
 	>
-		<el-form-item label="New Profile" prop="newName">
+		<el-form-item label="Profile Name" prop="newName">
 			<el-input v-model="formData.newName" placeholder="Name" />
 		</el-form-item>
-		<el-form-item label="Repo Type">
-			<el-radio-group v-model="formData.repoType">
-				<el-radio label="local" size="large">Local</el-radio>
-				<el-radio label="sftp" size="large" disabled>SFTP</el-radio>
-				<el-radio label="rest" size="large" disabled>Rest</el-radio>
-				<el-radio label="s3" size="large" disabled>S3</el-radio>
-			</el-radio-group>
+		<el-form-item label="Sources">
+			<el-button @click="selectSourceDir" icon="CirclePlusFilled">Select Folder</el-button>
+			<el-alert type="info" show-icon :closable="false">
+				{{ formData.backupDirs.length }} folders selected. You can add more later.
+			</el-alert>
 		</el-form-item>
-		<el-form-item label="Repository Target">
-			<el-button @click="selectDir" v-show="formData.repoType === 'local'">Select Empty Folder</el-button>
+		<el-form-item label="Repository Input">
+			<el-select v-model="formData.repoType">
+				<el-option label="Default" value="default">
+					<em>Select a folder on your PC or external hard-drive</em>
+				</el-option>
+				<el-option label="Expert" value="expert">
+					<em>Manually input target URI and ENV-variables</em>
+				</el-option>
+			</el-select>
+			<el-alert type="info" show-icon :closable="false" v-show="formData.repoType==='expert'">
+				For full information on advanced repository options, see <a href="https://restic.readthedocs.io/en/stable/030_preparing_a_new_repo.html">the restic docs</a>
+			</el-alert>
+		</el-form-item>
+		<el-form-item label="Repository Target" v-show="formData.repoType === 'default'">
+			<el-button @click="selectDir" >Select an empty Folder or existing repository</el-button>
 			<el-alert :title="'Selected: '+formData.repoSelect" type="success" v-show="formData.repoSelect.length > 0" />
-			<el-input v-model="formData.repoRaw" v-show="formData.repoType === 'sftp'" />
+		</el-form-item>
+		<el-form-item label="Repository URL" v-show="formData.repoType === 'expert'">
+			<el-input v-model="formData.repoRaw" placeholder="rest:https://example.org:8000/"  />
+		</el-form-item>
+		<el-form-item label="Repository ENV Vars" v-show="formData.repoType === 'expert'">
+			<el-input v-model="formData.repoEnv" type="textarea" cols="50" rows="2" placeholder="AWS_ACCESS_KEY_ID=..."  />
+			<el-alert type="info" show-icon :closable="false">
+				One variable per line. Vars are also inherited from the GUI.
+			</el-alert>
 		</el-form-item>
 		<el-form-item label="Password">
 			<el-input

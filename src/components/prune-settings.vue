@@ -43,7 +43,7 @@ export default defineComponent({
 
 	methods: {
 		async preview() {
-			let out = await Repo.forget(this.profile, this.settings, true);
+			let out = await Repo.forget(this.profile, this.settings, true, this.profile.backupDirs);
 			console.log(out);
 			this.previewResult = out;
 		},
@@ -58,6 +58,10 @@ export default defineComponent({
 </script>
 
 <template>
+	<el-alert type="info" show-icon :closable="false" style="margin-bottom: 2em;">
+		Restic will keep several versions of your data.
+		Here you can define how many will be kept at most when you run a cleanup.
+	</el-alert>
 	<el-form-item label="Keep Latest">
 		<el-input-number v-model="settings.keepLast" :strict-step="true" :step="1" />
 	</el-form-item>
