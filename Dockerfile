@@ -1,9 +1,9 @@
 FROM docker.io/electronuserland/builder:wine-mono
 
-ENV VERSION=0.15.0
+ENV VERSION=0.15.1
 ENV NODE_ENV=staging
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@7
 ADD . /app
 RUN mkdir -p /app/bin/linux /app/bin/mac /app/bin/win
 ADD "https://github.com/restic/restic/releases/download/v${VERSION}/restic_${VERSION}_linux_amd64.bz2" /app/bin/linux/restic.bz2

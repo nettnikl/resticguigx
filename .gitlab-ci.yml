@@ -2,7 +2,7 @@ stages:
   - build
 
 variables:
-  RESTIC_VERSION: "0.15.0"
+  RESTIC_VERSION: "0.15.1"
   NODE_ENV: "staging"
 
 build:
@@ -11,7 +11,7 @@ build:
     - tags
   image: docker.io/electronuserland/builder:wine-mono
   before_script:
-    - npm install -g pnpm
+    - npm install -g pnpm@7
     - pnpm config set store-dir .pnpm-store
   script:
     - mkdir -p bin/linux bin/mac bin/win
