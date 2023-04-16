@@ -2,9 +2,11 @@
 
 A simple GUI for restic, built with Electron & Vue3
 
-![Screenshot](https://gitlab.com/stormking/resticguigx/-/raw/master/screenshot.png "Restic-Backup-GX")
+[Download](https://gitlab.com/stormking/resticguigx/-/releases)
 
 Status: BETA - should work pretty well, just needs further testing for S3 and http repositories
+
+![Screenshot](https://gitlab.com/stormking/resticguigx/-/raw/master/screenshot.png "Restic-Backup-GX")
 
 ## Features ##
 
