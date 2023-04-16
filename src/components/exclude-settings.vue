@@ -102,9 +102,7 @@ export default defineComponent({
 		</el-input>
 	</el-form-item>
 	<el-button @click="save" icon="CircleCheckFilled" type="primary">Save</el-button>
-	<el-alert type="info" show-icon :closable="false">
-		<ul>
-			<li>More info at https://restic.readthedocs.io/en/stable/040_backup.html#excluding-files</li>
-		</ul>
+	<el-alert type="info" show-icon :closable="false" style="margin-top: 1em;">
+		<p>For more info see <a href="https://restic.readthedocs.io/en/stable/040_backup.html#excluding-files">restic docs</a></p>
 	</el-alert>
 </template>

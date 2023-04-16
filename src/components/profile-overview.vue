@@ -235,7 +235,7 @@ export default defineComponent({
 </script>
 
 <template>
-	<el-card class="card-light">
+	
 	<el-descriptions 
 		title="Info" 
 		border
@@ -264,7 +264,7 @@ export default defineComponent({
 
 	
 
-	<el-tabs  v-model="accordion" type="card" v-loading="working" style="text-align: left;">
+	<el-tabs  v-model="accordion" type="border-card" v-loading="working" style="text-align: left;">
 		<el-tab-pane
 			label="Folders"
 			name="paths"
@@ -311,13 +311,12 @@ export default defineComponent({
 			<exclude-settings-vue :profile="profile" @save="updateExcludeSettings" />
 		</el-tab-pane>
 		<el-tab-pane label="Unlock" name="unlock">
-			<el-alert type="info" show-icon :closable="false">
+			<el-alert type="info" show-icon :closable="false" style="margin-bottom: 1em;">
 				Sometimes the repository will not be closed properly and you get an error saying it is locked.
 				<br/>If that happens, you can manually send the unlock command here.
 			</el-alert>
 			<el-button @click="unlock" variant="notice">Unlock</el-button>
 		</el-tab-pane>
 	</el-tabs>
-	</el-card>
 	
 </template>

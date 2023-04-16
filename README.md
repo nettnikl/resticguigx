@@ -1,23 +1,24 @@
-# Restic Backup GUI #
+# Restic Backup GX #
 
-Restic + Vue3 + Electron
+A simple GUI for restic, built with Electron & Vue3
 
-![Screenshot](https://gitlab.com/stormking/resticguigx/-/raw/master/screenshot.png "Restic-UI-GX")
+![Screenshot](https://gitlab.com/stormking/resticguigx/-/raw/master/screenshot.png "Restic-Backup-GX")
 
+Status: BETA - should work pretty well, just needs further testing for S3 and http repositories
 
 ## Features ##
 
-- setup profiles with multiple backup locations
-- forget settings
-- store repo password
+- setup profiles for multiple backup locations
+- pruning settings
+- can store password
 - shows repo size
-- exclude settings
+- exclusion settings for paths and size
 - restore to temp path or original path
-- mount to restore files manually
+- can mount to search files manually (if FUSE is installed)
 
 ## Roadmap ##
 
-- expose the concept of snapshots
+- expose the concept of snapshots better
 
 ## dev ##
 
@@ -28,14 +29,4 @@ Restic + Vue3 + Electron
 - place in ./bin/linux/restic
 - make executable
 - pnpm run dev
-
-
-### todo
-
-- icon
-- fix unmount problem
-
-- ?? fix can mount without specifying location
-- should display currently running command
-
 

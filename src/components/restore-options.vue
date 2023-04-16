@@ -64,14 +64,26 @@ export default defineComponent({
 	methods: {
 		async startMount() {
 			this.working = true;
-			await Repo.mount(this.profile, this.path);
-			this.mounted = true;
+			this.error = '';
+			try {
+				await Repo.mount(this.profile, this.path);
+				this.mounted = true;
+			} catch (e: any) {
+				console.error(e)
+				this.error = e.message;
+			}
 			this.working = false;
 			console.log('mountprocess', this);
 		},
 		async stopMount() {
 			this.working = true;
-			await Repo.unmount();
+			this.error = '';
+			try {
+				await Repo.unmount();
+			} catch (e: any) {
+				console.error(e)
+				this.error = e.message;
+			}
 			this.mounted = false;
 			this.working = false;
 		},
@@ -89,8 +101,9 @@ export default defineComponent({
 				await process.waitForFinish();
 				let fullPath = this.targetPath === this.path ? this.path : Path.join(this.targetPath, this.path.substring(1))
 				await openFolder(fullPath);
-			} catch (e) {
+			} catch (e: any) {
 				console.error(e)
+				this.error = e.message;
 			}
 			this.working = false;
 		},
@@ -116,6 +129,9 @@ export default defineComponent({
 		<div v-loading="working">
 			<h3>Option 1: Pick through the files</h3>
 			<p>Mount the files into a temporary folder from where you can copy them yourself</p>
+			<el-alert type="info" show-icon :closable="false" style="margin-bottom: 1em;">
+				Requires FUSE being installed to work
+			</el-alert>
 			<el-button v-show="!mounted"
 				@click="startMount()"
 			> Mount </el-button>
@@ -123,20 +139,20 @@ export default defineComponent({
 				@click="stopMount()"
 			> Unmount </el-button>
 			<h3>Option 2: Restore to Folder</h3>
-			<p>Extract the files to a folder:</p>
+			<p>Extract the files to a folder</p>
 			<el-form-item label="Target">
 				<el-radio-group v-model="targetType">
 					<el-radio label="temp">Temporary Folder</el-radio>
-					<el-radio label="select" >Select a Folder</el-radio>
+					<el-radio label="select" >Selected Folder</el-radio>
 					<el-radio label="orig">Original Path</el-radio>
 				</el-radio-group>
 				<el-input v-model="targetPath" />
-				<el-alert type="info" show-icon :closable="false">
-					Warning: if the folder already exists, the new files will be added to it. 
-					<br />Existing files will be replaced.
-					<br />Files that do not exist in the backup will not be deleted.
-				</el-alert>
 			</el-form-item>
+			<el-alert type="info" show-icon :closable="false" style="margin-bottom: 1em;">
+				Warning: if the folder already exists, the new files will be added to it. 
+				Existing files will be replaced.
+				No files will be deleted.
+			</el-alert>
 			<el-button :disabled="working || !targetPath"
 				@click="runRestore"
 			> Start Restore </el-button>

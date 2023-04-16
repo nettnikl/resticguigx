@@ -48,6 +48,9 @@ h1 {
 	font-size: 3.2em;
 	line-height: 1.1;
 }
+h1, h2, h3, h4, h5 {
+	color: var(--el-text-color-primary);
+}
 
 button {
 	border-radius: 8px;
@@ -112,25 +115,40 @@ code {
 }
 
 html.dark #app {
-	--el-color-primary: #575be6;
+	--el-color-primary: #3a9193;
+	--el-fill-color-light: #1b2227;
+	color: var(--el-text-color-primary);
+}
+
+#app main {
+    padding-bottom: 2em;
 }
 
 .el-popover.el-popper {
 	word-break: keep-all;
 }
 
-
-html.dark .card-light {
-	/* background-color: rgba(33, 30, 40, 0.0); */
-}
-
 .el-alert {
     border-radius: 6px;
 }
 
-.el-table-v2__main .success {
-	background: #040;
+.loglist {
+    font-size: 80%;
+    text-align: left;
+    line-height: 1em;
+    margin: 2em 0;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #335;
+    list-style: disc;
+	padding: 1em 1em 1em 2em;
 }
-.el-table-v2__main .error {
-	background: #600;
+.loglist > li {
+    margin-bottom: 0.5em;
+}
+.loglist .success {
+    color: #0a0;
+}
+.loglist .error {
+    color: #a00;
 }

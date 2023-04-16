@@ -15,7 +15,7 @@ export default defineComponent({
 	data: () => ({
 		list: [] as string[],
 		newName: '',
-		collapse: 'new',
+		collapse: '',
 		working: false
 	}),
 

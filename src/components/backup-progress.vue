@@ -149,7 +149,7 @@ export default defineComponent({
 			process.stop()
 		},
 		getLogRowClass(info) {
-			return info.rowData.type;
+			return info.type;
 		},
 	}
 
@@ -159,7 +159,7 @@ export default defineComponent({
 
 <template>
 	<div>
-		<h2>Backup in Progress</h2>
+		<h2>Backup Progress</h2>
 		
 		<template v-if="progressBars.length > 4">
 			<el-progress
@@ -212,14 +212,15 @@ export default defineComponent({
 		>
 			Cancel 
 		</el-button>
-		<el-table-v2 
-			v-if="logEntries.length > 0"
-			:data="logEntries"
-			:columns="logCols"
-			:width="750"
-			:height="260"
-			:row-class="getLogRowClass"
-		/>
+		
+		<ol v-if="logEntries.length > 0" class="loglist">
+			<li v-for="(entry, index) in logEntries" 
+				:key="index"
+				:class="getLogRowClass(entry)"
+			>
+				[{{ entry.time.toLocaleTimeString() }}] {{ entry.message }}
+			</li>
+		</ol>
 		<el-descriptions
 			title="Summary"
 			v-show="!!summary.snapshot_id"
