@@ -1,79 +1,26 @@
 import du from 'du';
-import type { StatsResult } from './types'
-import child_process from 'child_process'
-import Path from 'node:path'
+import type { StatsResult, Snapshot, ForgetResultOne } from './types'
 import UserProfile, { BackupInfo, PruneSettings } from './model/profile';
 import Process from './model/process';
 import BatchProcess from './model/batch-process'
-import os from 'node:os';
-import fs from 'node:fs/promises'
-import { openFolder, checkForProcessRunning } from './node-api'
+import ResticBackend from './model/restic';
+import RusticBackend from './model/rustic';
 
-const binPath = process.env.NODE_ENV === 'development' 
-	? Path.join(process.cwd(), 'bin', 'linux', 'restic') 
-	: Path.join(process.resourcesPath!, 'bin', os.platform() === 'win32' ? 'restic.exe' : 'restic');
-const processEnv = process.env;
-type Output = { stdout: string, stderr: string }
+console.log('process.env.VITE_RESTIC_BACKEND', process.env.VITE_RESTIC_BACKEND);
+const RepoClass = process.env.VITE_RESTIC_BACKEND === 'rustic' ? RusticBackend : ResticBackend;
 
-function exec(args: string[], env: Record<string, string>): Promise<Output> {
-	return new Promise((res, rej) => {
-		child_process.execFile(binPath, args, {
-			env: {
-				...process.env,
-				...(env || {})
-			}
-		}, (err: any, stdout: string|Buffer, stderr: string|Buffer) => {
-			if (err) {
-				rej(err)
-			} else {
-				res({
-					stdout: Buffer.isBuffer(stdout) ? stdout.toString('utf8') : stdout,
-					stderr: Buffer.isBuffer(stderr) ? stderr.toString('utf8') : stderr
-				})
-			}
-		})
-	})
-}
+const repo = new RepoClass();
 
 export async function assertRepoExists(repoDir: string, password: string, repoEnv: Record<string, string>): Promise<Snapshot[]> {
-	try {
-		let res = await getSnapshots(repoDir, password, repoEnv);
-		return res;
-	} catch (e) {
-		await initRepo(repoDir, password, repoEnv);
-		return []
-	}
+	return repo.assertRepoExists(repoDir, password, repoEnv);
 }
 
 export async function initRepo(repoDir: string, password: string, repoEnv: Record<string, string>) {
-	let res = await exec([
-		'init',
-		'--json',
-		`-r=${repoDir}`
-	], {
-		...processEnv,
-		...repoEnv,
-		RESTIC_PASSWORD: password
-	})
-	return res.stdout;
+	return repo.initRepo(repoDir, password, repoEnv);
 }
 
 export async function stats(profile: UserProfile): Promise<StatsResult> {
-	let res = await exec([
-		'stats',
-		'--json',
-		`-r=${profile.getRepoPath()}`
-	], {
-		...processEnv,
-		...profile.getRepoEnv(),
-		RESTIC_PASSWORD: profile.getSecret()
-	})
-	console.log('stats output', res);
-	let stats = JSON.parse(res.stdout)
-	if (profile.isLocalRepo()) {
-		stats.total_size = await getFolderSize(profile.getRepoPath());
-	}
-	return stats;
+	return repo.stats(profile);
 }
 
 export async function getFolderSize(repoDir: string): Promise<number> {
@@ -81,277 +28,42 @@ export async function getFolderSize(repoDir: string): Promise<number> {
 	return res;
 }
 
-let runningProcess: BatchProcess|null = null;
-
 export function hasRunningProcess(): boolean {
-	return !!runningProcess;
+	return repo.hasRunningProcess();
 }
 export function getRunningProcess(): BatchProcess|null {
-	return runningProcess
-}
-
-export type BackupSummary = {
-	"message_type":"summary",
-	"files_new": number,
-	"files_changed": number,
-	"files_unmodified": number,
-	"dirs_new": number,
-	"dirs_changed": number,
-	"dirs_unmodified": number,
-	"data_blobs": number,
-	"tree_blobs": number,
-	"data_added": number,
-	"total_files_processed": number,
-	"total_bytes_processed": number,
-	"total_duration": number,
-	"snapshot_id": string
-}
-export type BackupProcess = {
-	"message_type":"status",
-	"percent_done": number,
-	"current_files": string[],
-	"total_files": number,
-	"total_bytes": number,
-	"seconds_elapsed": number,
-	"bytes_done": number,
-	"files_done": number
+	return repo.getRunningProcess();
 }
 
 export async function backup(profile: UserProfile, paths: BackupInfo[]): Promise<BatchProcess> {
-	if (runningProcess) throw new Error('a restic process is already running')
-	if (paths.length === 0) throw new Error('no paths specified')
-	await checkForProcessRunning(binPath);
-	let processes: Process[] = [];
-	let exclude: string[] = [`--iexclude=${profile.repoPath}`];
-	if (profile.excludeSettings) {
-		if (profile.excludeSettings.largerThanSize && profile.excludeSettings.largerThanSize > 0) {
-			exclude.push(`--exclude-larger-than=${profile.excludeSettings.largerThanSize}${profile.excludeSettings.largerThanType}`)
-		}
-		if (profile.excludeSettings.paths) {
-			profile.excludeSettings.paths.forEach(path => {
-				exclude.push(`--iexclude=${path}`)
-			})
-		}
-	}
-	for (let info of paths) {
-		let params = exclude.concat(...[
-			'--json',
-			'backup',
-			'--exclude-caches',
-			`--tag=${info.path}`,
-			`-r=${profile.repoPath}`,
-			`${info.path}`
-		]);
-		let process = new Process(binPath, params, {
-			...processEnv,
-			...profile.getRepoEnv(),
-			RESTIC_PASSWORD: profile.getSecret()
-		}, info)
-		processes.push(process);
-	}
-	let batch = new BatchProcess(processes);
-	batch.start();
-	runningProcess = batch;
-	batch.waitForFinish()
-	.catch(() => {})
-	.then(() => {
-		runningProcess = null;
-	})
-	return batch;
+	return repo.backup(profile, paths);
 }
 
-// function watchForLockedError(repoDir: string, password: string) {
-// 	return async function(err: Error) {
-// 		try {
-// 			if (!err.message.includes('locked')) return;
-// 			let running = await checkForProcessRunning(binPath);
-// 			if (running) return;
-// 			await unlock(repoDir, password)
-// 		} catch (err: any) {
-// 			console.error('error trying to unlock', err);
-// 		}
-// 	}
-// }
-
 export async function checkForRunningProcess() {
-	return checkForProcessRunning(binPath)
+	return repo.checkForRunningProcess()
 }
 
 export async function unlock(repoDir: string, password: string) {
-	await exec([
-		'unlock',
-		`-r=${repoDir}`
-	], {
-		RESTIC_PASSWORD: password
-	})
-}
-
-export type Snapshot = {
-	time: string,
-	parent?: string,
-	tree: string,
-	paths: string[],
-	hostname: string,
-	username: string,
-	uid: number,
-	gid: number,
-	tags: string[],
-	id: string,
-	short_id: string
-}
-
-export type ForgetResultOne = {
-	tags: null|string,
-	host: string,
-	paths: string[],
-	keep: Snapshot[],
-	remove: null|Snapshot[],
-	reasons: {
-		snapshot: Snapshot,
-		matches: string[],
-		counters: {
-			last: number
-		}
-	}[]
+	return repo.unlock(repoDir, password)
 }
 
 export async function forget(profile: UserProfile, settings: Partial<PruneSettings>, dryRun: boolean, pathInfo?: BackupInfo[], snapshotId?: string): Promise<ForgetResultOne[]> {
-	let params = [
-		'--json',
-		'forget',
-		`-r=${profile.repoPath}`
-	];
-	params.push(dryRun ? '--dry-run' : '--prune');
-	let keep: string[] = [];
-	if (settings.keepLast) keep.push('--keep-last='+settings.keepLast)
-	if (settings.keepHourly) keep.push('--keep-hourly='+settings.keepHourly)
-	if (settings.keepDaily) keep.push('--keep-daily='+settings.keepDaily)
-	if (settings.keepWeekly) keep.push('--keep-weekly='+settings.keepWeekly)
-	if (settings.keepMonthly) keep.push('--keep-monthly='+settings.keepMonthly)
-	if (keep.length) {
-		params = params.concat(...keep)
-	}
-	if (pathInfo && pathInfo.length) {
-		pathInfo.forEach(i => {
-			params.push('--tag='+i.path+'')
-		})
-	} else {
-		if (!snapshotId) throw new Error('must provide paths or snapshotId')
-		params.push(snapshotId)
-	}
-	// console.log(params, keep);
-	let res = await exec(params, {
-		...process.env,
-		...profile.getRepoEnv(),
-		RESTIC_PASSWORD: profile.getSecret()
-	});
-	console.log('forget output', res);
-	if (!res.stdout) {
-		return []
-	}
-	let firstLine = res.stdout.split('\n')[0]
-	return firstLine[0] === '[' ? JSON.parse(firstLine) : []
+	return repo.forget(profile, settings, dryRun, pathInfo, snapshotId)
 }
 
 export async function getSnapshots(repoDir: string, password: string, repoEnv: Record<string, string>): Promise<Snapshot[]> {
-	let res = await exec([
-		'snapshots',
-		`-r=${repoDir}`,
-		'--json'
-	], {
-		...processEnv,
-		...repoEnv,
-		RESTIC_PASSWORD: password
-	});
-	console.log('snapshots output', res);
-	return res.stdout ? JSON.parse(res.stdout) : []
+	return repo.getSnapshots(repoDir, password, repoEnv)
 }
 
-let currentMount: Process|null = null;
-const mountBasePath = Path.join(os.tmpdir(), 'restic-mount-'+Date.now());
 export async function mount(profile: UserProfile, path: string): Promise<Process> {
-	if (currentMount) {
-		if (!currentMount.isConnected()) {
-			currentMount = null
-		} else {
-			if (currentMount.info.path !== path) {
-				currentMount.stop();
-				currentMount = null;
-			}
-		}
-	}
-	if (!currentMount) {
-		await fs.mkdir(mountBasePath, { recursive: true, mode: 0o770 })
-
-		let process = new Process(binPath, [
-			'--json',
-			'mount',
-			`--tag=${path}`,
-			`-r=${profile.repoPath}`,
-			mountBasePath
-		], {
-			...processEnv,
-			...profile.getRepoEnv(),
-			RESTIC_PASSWORD: profile.getSecret()
-		}, { path });
-		currentMount = process;
-		process.start();
-		process.waitForFinish()!
-			.catch(() => {})
-			.then(() => {
-				currentMount = null;
-			})
-	}
-
-	let fullPath = Path.join(mountBasePath, 'tags', path.substring(1), 'latest', path.substring(1));
-	await waitForPath(fullPath, 5);
-	await openFolder(fullPath);
-	
-	return currentMount;
+	return repo.mount(profile, path)
 }
 
-export async function unmount() {
-	if (!currentMount || currentMount.isKilled()) throw new Error('not mounted')
-	currentMount.stop();
+export function unmount() {
+	return repo.unmount()
 }
 
 export async function restore(profile: UserProfile, path: string, targetPath: string) {
-	await fs.mkdir(targetPath, { recursive: true })
-	let params = [
-		'--json',
-		'restore',
-		`--tag=${path}`,
-		`-r=${profile.repoPath}`,
-		`--target=${targetPath}`,
-		'latest'
-	]
-	let process = new Process(binPath, params, {
-		...processEnv,
-		...profile.getRepoEnv(),
-		RESTIC_PASSWORD: profile.getSecret()
-	}, { path })
-	process.start();
-
-	return process;
+	return repo.restore(profile, path, targetPath)
 }
 
-async function waitForPath(dir: string, retry=5): Promise<boolean> {
-	try {
-		let stat = await fs.stat(dir);
-		if (stat.isDirectory()) return true;
-		else throw new Error('is not a directory: '+dir);
-	} catch (e: any) {
-		if (e.code === 'ENOENT') {
-			if (retry < 1) throw new Error('waitForPath timed out for: '+dir);
-			await sleep(500);
-			return waitForPath(dir, retry-1);
-		}
-		throw e;
-	}
-}
-
-function sleep(ms: number) {
-	return new Promise(res => {
-		setTimeout(res, ms)
-	})
-}

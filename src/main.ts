@@ -26,7 +26,7 @@ app.mount('#app')
 		postMessage({ payload: 'removeLoading' }, '*')
 	})
 
-console.log('app loaded', app);
+console.log('app loaded', app, process.env);
 
 
 document.addEventListener('click', (event) => {

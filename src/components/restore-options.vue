@@ -103,7 +103,7 @@ export default defineComponent({
 				await openFolder(fullPath);
 			} catch (e: any) {
 				console.error(e)
-				this.error = e.message;
+				this.error += e.message;
 			}
 			this.working = false;
 		},
