@@ -1,8 +1,9 @@
 <script lang="ts">
-import { ElFormItem, ElInput, ElButton } from 'element-plus';
+import { ElFormItem, ElButton } from 'element-plus';
 import { defineComponent } from 'vue';
-import UserProfile, { BackupInfo, PruneSettings } from '../service/model/profile';
+import UserProfile, { PruneSettings } from '../service/model/profile';
 import * as Repo from '../service/repo'
+import type { ForgetResultOne } from '../service/types'
 
 export default defineComponent({
 	name: 'PruneSettings',
@@ -27,7 +28,7 @@ export default defineComponent({
 			keepWeekly: 0,
 			keepMonthly: 0
 		} as PruneSettings,
-		previewResult: [] as Repo.ForgetResultOne[],
+		previewResult: [] as ForgetResultOne[],
 		working: false,
 		error: '',
 	}),

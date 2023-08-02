@@ -1,6 +1,6 @@
 import type { StatsResult } from '../types'
 import { pathIsDirectory } from '../node-api'
-import type { Snapshot } from '../repo'
+import type { Snapshot } from '../types'
 import os from 'node:os'
 
 export type BackupInfo = {

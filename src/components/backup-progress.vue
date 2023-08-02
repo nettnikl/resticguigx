@@ -1,6 +1,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { getRunningProcess, BackupProcess, BackupSummary } from '../service/repo';
+import { getRunningProcess } from '../service/repo';
+import type { BackupProcess, BackupSummary } from '../service/types'
 import humanizeDuration from 'humanize-duration'
 import { filesize } from "filesize";
 import EtaCalculator from '../service/model/eta'
