@@ -32,6 +32,7 @@ export default defineComponent({
 		open: false,
 		working: false,
 		mounted: false,
+		progress: 0,
 		targetType: '',
 		targetPath: '',
 		error: '',
@@ -89,11 +90,37 @@ export default defineComponent({
 		},
 		async runRestore() {
 			this.working = true;
+			let lastProgress;
+			let parseLine = (str: string) => {
+				let data: any;
+				try {
+					data = JSON.parse(str);
+				} catch (e: any) {
+					// if (e.message.includes('Unexpected end of JSON input')) return;
+					if (!str || !str.trim().length) return;
+					this.error += '\n'+e.message;
+					return;
+				}
+				// console.log('received update', data);
+				if (data.message_type === 'summary') {
+					this.message = `Files Restored: ${data.files_restored}`
+				} else if (data.message_type === 'status') {
+					lastProgress = data;
+				}
+			}
+			let timer = setInterval(() => {
+				if (!lastProgress) return;
+				this.progress = Math.ceil((lastProgress.percent_done || 0) * 100);
+			}, 750)
 			try {
 				let target = this.targetPath === this.path ? this.getRoot(this.path) : this.targetPath;
 				let process = await Repo.restore(this.profile, this.path, target);
 				process?.getStdOut()?.on('data', (chk) => {
-					this.message += chk.toString('utf-8');
+					let str: string = chk.toString('utf-8');
+					let lines = str.split('\n')
+					for (let line of lines) {
+						parseLine(line)
+					}
 				})
 				process?.getStdErr()?.on('data', (chk) => {
 					this.error += chk.toString('utf8');
@@ -104,6 +131,9 @@ export default defineComponent({
 			} catch (e: any) {
 				console.error(e)
 				this.error += e.message;
+			} finally {
+				this.progress = 0;
+				clearInterval(timer)
 			}
 			this.working = false;
 		},
@@ -156,7 +186,16 @@ export default defineComponent({
 			<el-button :disabled="working || !targetPath"
 				@click="runRestore"
 			> Start Restore </el-button>
-
+			<el-progress
+				v-show="progress > 0"
+				:text-inside="true"
+				:percentage="progress"
+				type="line"
+				:stroke-width="20"
+				style="margin-bottom: 10px"
+			>
+				{{ progress }}%
+			</el-progress>
 			<el-alert :title="error" type="error" v-if="error" />
 			<el-alert :title="message" type="success" v-if="message" />
 		</div>
