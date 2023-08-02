@@ -29,7 +29,7 @@ build:
     - unzip -o restic.zip
     - mv "restic_${RESTIC_VERSION}_windows_amd64.exe" restic.exe
     - cd ../..
-    - pnpm install
+    - pnpm install --no-frozen-lockfile
     - pnpm run build
   artifacts:
     paths:
