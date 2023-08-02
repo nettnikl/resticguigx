@@ -75,11 +75,20 @@ export default class ResticBackend extends BaseBackend {
 				})
 			}
 		}
+		const baseParams = [
+			'--json',
+			'backup',
+			'--group-by=tags',
+			'--exclude-caches'
+		]
+		if (profile.backupSettings.ignoreCtime) {
+			baseParams.push('--ignore-ctime')
+		}
+		if (profile.backupSettings.ignoreInode) {
+			baseParams.push('--ignore-inode')
+		}
 		for (let info of paths) {
-			let params = exclude.concat(...[
-				'--json',
-				'backup',
-				'--exclude-caches',
+			let params = exclude.concat(...baseParams).concat(...[
 				`--tag=${info.path}`,
 				`-r=${profile.repoPath}`,
 				`${info.path}`

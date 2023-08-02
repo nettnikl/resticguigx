@@ -2,7 +2,6 @@
 import { ElFormItem, ElInput, ElButton } from 'element-plus';
 import { defineComponent } from 'vue';
 import UserProfile, { ExcludeSettings } from '../service/model/profile';
-import * as Repo from '../service/repo'
 
 export default defineComponent({
 	name: 'ExcludeSettings',

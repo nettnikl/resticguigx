@@ -152,3 +152,7 @@ html.dark #app {
 .loglist .error {
     color: #a00;
 }
+
+#pane-backupSettings .el-checkbox {
+	display: block;
+}

@@ -1,12 +1,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
-import UserProfile, { BackupInfo, ExcludeSettings, PruneSettings } from '../service/model/profile';
+import UserProfile, { BackupInfo, BackupSettings, ExcludeSettings, PruneSettings } from '../service/model/profile';
 import { saveProfile } from '../service/user-storage'
 import * as Repo from '../service/repo'
 import backupNewVue from './backup-new.vue';
 import backupProgressVue from './backup-progress.vue';
 import pruneSettingsVue from './prune-settings.vue';
 import excludeSettingsVue from './exclude-settings.vue';
+import backupSettingsVue from './backup-settings.vue';
 import { filesize } from "filesize";
 import { error } from 'console';
 import { ElDescriptions, ElDescriptionsItem, ElAlert, ElButton, ElButtonGroup, ElCard, ElCollapse, ElCollapseItem, ElMessage } from 'element-plus';
@@ -21,6 +22,7 @@ export default defineComponent({
 		backupProgressVue,
 		pruneSettingsVue,
 		excludeSettingsVue,
+		backupSettingsVue,
 		restoreOptionsVue
 	},
 
@@ -179,6 +181,15 @@ export default defineComponent({
 			})
 			this.accordion = '';
 		},
+		async updateBackupSettings(s: BackupSettings) {
+			this.profile.backupSettings = s;
+			await this.saveProfile();
+			ElMessage({
+				message: 'Settings have been saved',
+				type: 'success'
+			})
+			this.accordion = '';
+		},
 		async runPrune(info?: BackupInfo) {
 			this.working = true;
 			try {
@@ -309,6 +320,9 @@ export default defineComponent({
 		</el-tab-pane>
 		<el-tab-pane label="Exclude Settings" name="excludeSettings">
 			<exclude-settings-vue :profile="profile" @save="updateExcludeSettings" />
+		</el-tab-pane>
+		<el-tab-pane label="Backup Settings" name="backupSettings">
+			<backup-settings-vue :profile="profile" @save="updateBackupSettings" />
 		</el-tab-pane>
 		<el-tab-pane label="Unlock" name="unlock">
 			<el-alert type="info" show-icon :closable="false" style="margin-bottom: 1em;">

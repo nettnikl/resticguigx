@@ -29,6 +29,12 @@ export type ExcludeSettings = {
 	largerThanType: string
 }
 
+export type BackupSettings = {
+	ignoreInode: boolean,
+	ignoreCtime: boolean,
+	groupBy: string
+}
+
 export default class UserProfile {
 
 	static PW_STRAT_PROFILE = 'profile'
@@ -42,6 +48,7 @@ export default class UserProfile {
 	backupDirs: BackupInfo[] = []
 	pruneSettings: Partial<PruneSettings> = {}
 	excludeSettings: Partial<ExcludeSettings> = {}
+	backupSettings: Partial<BackupSettings> = {}
 	passwordStrategy = UserProfile.PW_STRAT_PROFILE
 	storedSecret: string = ''
 	_tempSecret: string = ''
