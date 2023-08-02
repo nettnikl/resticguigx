@@ -6,10 +6,14 @@ import BatchProcess from './model/batch-process'
 import ResticBackend from './model/restic';
 import RusticBackend from './model/rustic';
 
-console.log('process.env.VITE_RESTIC_BACKEND', process.env.VITE_RESTIC_BACKEND);
-const RepoClass = process.env.VITE_RESTIC_BACKEND === 'rustic' ? RusticBackend : ResticBackend;
+console.log('process.env.VITE_RESTIC_BACKEND', import.meta.env.VITE_RESTIC_BACKEND);
+const RepoClass = import.meta.env.VITE_RESTIC_BACKEND === 'rustic' ? RusticBackend : ResticBackend;
 
 const repo = new RepoClass();
+
+export function getBinFile(): string {
+	return repo.getBinFile();
+}
 
 export async function assertRepoExists(repoDir: string, password: string, repoEnv: Record<string, string>): Promise<Snapshot[]> {
 	return repo.assertRepoExists(repoDir, password, repoEnv);

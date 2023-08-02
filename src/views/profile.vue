@@ -66,9 +66,9 @@ export default defineComponent({
 				let res = await Repo.getSnapshots(repo, pw, env);
 				// await this.profile!.setPathsFromSnapshots(res)
 				this.canAccess = true;
-			} catch (e) {
+			} catch (e: any) {
 				this.canAccess = false;
-				this.error = 'unable to load repo at "'+this.profile!.getRepoPath()+'" with given password'
+				this.error = 'unable to load repo at "'+this.profile!.getRepoPath()+'" with given password because: '+e.message
 			} finally {
 				this.working = false;
 			}

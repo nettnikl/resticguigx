@@ -1,20 +1,23 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { getBinFile } from '../service/repo';
 
 export default defineComponent({
 	name: 'AboutPage',
 
-	components: {
-	},
-
-	methods: {
+	computed: {
+		binName() {
+			return getBinFile();
+		}
 	}
+
 	
 })
 </script>
 
 <template>
 	<h1>Restic Backup</h1>
+	<p>{{ binName }}</p>
 	<el-card style="width: 600px; margin: 2rem auto">
 		<template #header>
 			<h2>Restic</h2>

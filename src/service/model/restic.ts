@@ -10,7 +10,7 @@ import { openFolder, checkForProcessRunning } from '../node-api'
 
 export default class ResticBackend extends BaseBackend {
 
-	protected getBinFile() {
+	public getBinFile() {
 		return 'restic';
 	}
 

@@ -10,7 +10,7 @@ import { openFolder, checkForProcessRunning } from '../node-api'
 
 export default class RusticBackend extends BaseBackend {
 
-	protected getBinFile() {
+	public getBinFile() {
 		return 'rustic';
 	}
 
@@ -43,7 +43,7 @@ export default class RusticBackend extends BaseBackend {
 
 	public async stats(profile: UserProfile): Promise<StatsResult> {
 		let res = await this.exec([
-			'stats',
+			'repoinfo',
 			'--json',
 			`-r=${profile.getRepoPath()}`
 		], {
@@ -76,14 +76,15 @@ export default class RusticBackend extends BaseBackend {
 			}
 		}
 		for (let info of paths) {
-			let params = exclude.concat(...[
-				'--json',
+			let params = [
 				'backup',
+				'--json',
+				...exclude,
 				'--exclude-caches',
 				`--tag=${info.path}`,
 				`-r=${profile.repoPath}`,
 				`${info.path}`
-			]);
+			];
 			let process = new Process(this.getFullBinPath(), params, {
 				...this.getProcessEnv(),
 				...profile.getRepoEnv(),
@@ -113,8 +114,8 @@ export default class RusticBackend extends BaseBackend {
 
 	public async forget(profile: UserProfile, settings: Partial<PruneSettings>, dryRun: boolean, pathInfo?: BackupInfo[] | undefined, snapshotId?: string | undefined): Promise<ForgetResultOne[]> {
 		let params = [
-			'--json',
 			'forget',
+			'--json',
 			`-r=${profile.repoPath}`
 		];
 		params.push(dryRun ? '--dry-run' : '--prune');

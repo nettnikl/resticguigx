@@ -34,7 +34,7 @@ export default abstract class BaseBackend {
 		return this.runningProcess
 	}
 
-	protected abstract getBinFile(): string
+	public abstract getBinFile(): string
 
 	protected getFullBinPath() {
 		let file = this.getBinFile();
