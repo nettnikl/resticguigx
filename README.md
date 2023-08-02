@@ -22,6 +22,14 @@ Status: BETA - should work pretty well, just needs further testing for S3 and ht
 
 - expose the concept of snapshots better
 
+## Change Log
+
+### 2023-08-02 v0.11.0
+
+- restic upgraded to v0.16
+- restore shows progress-bar
+- added settings to customize file change detection
+
 ## dev ##
 
 ### setup
