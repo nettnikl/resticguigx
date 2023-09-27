@@ -144,7 +144,24 @@ export default defineComponent({
 				{{ formData.backupDirs.length }} folders selected. You can add more later.
 			</el-alert>
 		</el-form-item>
-		<el-form-item label="Repository Input">
+		<el-form-item label="Encryption Password">
+			<el-input
+				type="password"
+				v-model="formData.password"
+				show-password
+			/>
+			<el-alert type="info" show-icon :closable="false">
+				Without this password, all data will be lost
+			</el-alert>
+		</el-form-item>
+		<el-form-item label="Password Strategy">
+			<el-radio-group v-model="formData.passStrat">
+				<el-radio label="ask" size="large">Ask everytime</el-radio>
+				<el-radio label="profile" size="large">Store in Profile</el-radio>
+			</el-radio-group>
+		</el-form-item>
+		<el-divider></el-divider>
+		<el-form-item label="Repository Type">
 			<el-select v-model="formData.repoType">
 				<el-option label="Default" value="default">
 					<em>Select a folder on your PC or external hard-drive</em>
@@ -170,22 +187,7 @@ export default defineComponent({
 				One variable per line. Vars are also inherited from the GUI.
 			</el-alert>
 		</el-form-item>
-		<el-form-item label="Password">
-			<el-input
-				type="password" 
-				v-model="formData.password" 
-				show-password
-			/>
-			<el-alert type="info" show-icon :closable="false">
-				Without this password, all data will be lost
-			</el-alert>
-		</el-form-item>
-		<el-form-item label="Password Strategy">
-			<el-radio-group v-model="formData.passStrat">
-				<el-radio label="ask" size="large">Ask everytime</el-radio>
-				<el-radio label="profile" size="large">Store in Profile</el-radio>
-			</el-radio-group>
-		</el-form-item>
+		<el-divider></el-divider>
 		<el-button @click="create" :disabled="!canCreate" v-loading="working">
 			Create
 		</el-button>
