@@ -69,10 +69,13 @@ export default class ResticBackend extends BaseBackend {
 			if (profile.excludeSettings.largerThanSize && profile.excludeSettings.largerThanSize > 0) {
 				exclude.push(`--exclude-larger-than=${profile.excludeSettings.largerThanSize}${profile.excludeSettings.largerThanType}`)
 			}
-			if (profile.excludeSettings.paths) {
+			if (profile.excludeSettings.excludeMethod==="exclude-list" && profile.excludeSettings.paths) {
 				profile.excludeSettings.paths.forEach(path => {
 					exclude.push(`--iexclude=${path}`)
 				})
+			}
+			if (profile.excludeSettings.excludeMethod==="exclude-file" && profile.excludeSettings.excludeFile) {
+				exclude.push(`--iexclude-file=${profile.excludeSettings.excludeFile}`)
 			}
 		}
 		const baseParams = [

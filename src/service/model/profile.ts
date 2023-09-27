@@ -24,6 +24,8 @@ export type PruneSettings = {
 }
 
 export type ExcludeSettings = {
+	excludeMethod: string,
+	excludeFile: string,
 	paths: string[],
 	largerThanSize: number,
 	largerThanType: string

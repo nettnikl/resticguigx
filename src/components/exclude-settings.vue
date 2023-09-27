@@ -72,20 +72,34 @@ export default defineComponent({
 <template>
 	<h3>Exclude by Path</h3>
 	<p>These folder and file names will not be included in future backups.</p>
-	<el-form-item label="Path" v-for="(path, i) of settings.paths">
+	<el-form-item label="Exclusion method">
+		<el-radio-group v-model="settings.excludeMethod">
+			<el-radio label="" size="large">No exclusion by path</el-radio>
+			<el-radio label="exclude-list" size="large">Use exclude list</el-radio>
+			<el-radio label="exclude-file" size="large">Use exclude file</el-radio>
+		</el-radio-group>
+	</el-form-item>
+	<el-form-item label="Path" v-for="(path, i) of settings.paths" v-show="settings.excludeMethod === 'exclude-list'">
 		<el-input v-model="settings.paths[i]">
 			<template #append>
 				<el-button @click="remove(i)" icon="RemoveFilled" />
 			</template>
 		</el-input>
 	</el-form-item>
-	<el-button @click="add" icon="CirclePlusFilled">Add Path</el-button>
-	<el-alert type="info" show-icon :closable="false">
+	<el-button @click="add" icon="CirclePlusFilled" v-show="settings.excludeMethod === 'exclude-list'">Add Path</el-button>
+	<el-alert type="info" show-icon :closable="false" v-show="settings.excludeMethod === 'exclude-list'">
 		<ul>
 			<li>Can match partial names by using * (e.g. "Videos*")</li>
 			<li>Can match folder structures with ** (e.g. "Music/**/temp")</li>
 			<li>Names are not case-sensitive</li>
 			<li>System cache directories will be excluded automatically.</li>
+		</ul>
+	</el-alert>
+	<el-input v-model="settings.excludeFile" v-show="settings.excludeMethod === 'exclude-file'">
+	</el-input>
+	<el-alert type="info" show-icon :closable="false" v-show="settings.excludeMethod === 'exclude-file'">
+		<ul>
+			<li>The provided file is expected to follow the rules of rsync ignore files.</li>
 		</ul>
 	</el-alert>
 	<h3>Exclude by Size</h3>
