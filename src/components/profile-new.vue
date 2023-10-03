@@ -2,7 +2,7 @@
 import { defineComponent } from 'vue';
 import * as Repo from '../service/repo';
 import { createProfile, saveProfile } from '../service/user-storage'
-import { selectDirectory } from '../service/node-api'
+import {selectDirectory, selectFile} from '../service/node-api'
 import UserProfile, { BackupInfo } from '../service/model/profile';
 import backupNewVue from './backup-new.vue';
 
@@ -25,8 +25,10 @@ export default defineComponent({
 			repoEnv: '',
 			backupDirs: [] as BackupInfo[],
 			password: '',
+			pwFile: '',
 			passStrat: UserProfile.PW_STRAT_ASK
 		},
+		passSrc: '',
 		working: false,
 		error: '',
 		formRules: {
@@ -48,7 +50,10 @@ export default defineComponent({
 
 	computed: {
 		canCreate() {
-			return (this.formData.repoSelect || this.formData.repoRaw) && this.formData.password && this.formData.newName && !this.working
+			return (this.formData.repoSelect || this.formData.repoRaw) &&
+				(this.passSrc === '' && this.formData.password || this.passSrc === 'file' && this.formData.pwFile) &&
+				this.formData.newName &&
+				!this.working
 		}
 	},
 
@@ -69,7 +74,12 @@ export default defineComponent({
 					repoDir = this.formData.repoRaw;
 					repoEnv = this.getEnvFromText(this.formData.repoEnv);
 				}
-				let snapshots = await Repo.assertRepoExists(repoDir, repoEnv, {RUSTIC_PASSWORD: this.formData.password});
+				let snapshots = await Repo.assertRepoExists(repoDir, repoEnv, {
+					RESTIC_PASSWORD: this.formData.password,
+					RESTIC_PASSWORD_FILE: this.formData.pwFile,
+					RUSTIC_PASSWORD: this.formData.password,
+					RUSTIC_PASSWORD_FILE: this.formData.pwFile,
+				});
 				let model = await createProfile(this.formData.newName);
 				model.repoPath = repoDir;
 				model.passwordStrategy = this.formData.passStrat;
@@ -121,7 +131,13 @@ export default defineComponent({
 			for (let path of res.filePaths) {
 				this.added(path);
 			}
-		}
+		},
+		async selectPwFile() {
+			let res = await selectFile();
+			if (res.canceled) return;
+			this.formData.pwFile = res.filePaths[0];
+			console.log('select result', res);
+		},
 	}
 
 	
@@ -145,16 +161,33 @@ export default defineComponent({
 			</el-alert>
 		</el-form-item>
 		<el-form-item label="Encryption Password">
+			<el-radio-group v-model="passSrc">
+				<el-radio label="" size="large">With password (Default)</el-radio>
+				<el-radio label="file" size="large">With password file</el-radio>
+			</el-radio-group>
 			<el-input
 				type="password"
 				v-model="formData.password"
+				v-if="passSrc === ''"
+				placeholder="***"
 				show-password
 			/>
+			<el-input
+				v-model="formData.pwFile"
+				v-if="passSrc === 'file'"
+				placeholder="/etc/backup-password.txt"
+			/>
+			<el-button
+				@click="selectPwFile"
+				icon="CirclePlusFilled"
+				v-if="passSrc === 'file'">
+				Select Password File
+			</el-button>
 			<el-alert type="info" show-icon :closable="false">
 				Without this password, all data will be lost
 			</el-alert>
 		</el-form-item>
-		<el-form-item label="Password Strategy">
+		<el-form-item label="Password Strategy" v-if="passSrc === ''">
 			<el-radio-group v-model="formData.passStrat">
 				<el-radio label="ask" size="large">Ask everytime</el-radio>
 				<el-radio label="profile" size="large">Store in Profile</el-radio>

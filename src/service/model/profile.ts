@@ -117,6 +117,7 @@ export default class UserProfile {
 
 	getRepoAuthEnv(): Record<string, string> {
 		return {
+			RESTIC_PASSWORD: this.getSecret(),
 			RUSTIC_PASSWORD: this.getSecret()
 		};
 	}

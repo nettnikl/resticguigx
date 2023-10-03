@@ -4,6 +4,7 @@ import profileOverviewVue from '../components/profile-overview.vue';
 import UserProfile from '../service/model/profile';
 import { loadProfile } from '../service/user-storage';
 import * as Repo from '../service/repo'
+import {selectDirectory, selectFile} from "../service/node-api";
 
 export default defineComponent({
 	name: 'ProfileView',
@@ -16,6 +17,7 @@ export default defineComponent({
 		profile: null as UserProfile|null,
 		error: '',
 		password: '',
+		pwFile: '',
 		canAccess: false,
 		working: false
 	}),
@@ -55,15 +57,31 @@ export default defineComponent({
 				this.password = '';
 			}
 		},
+		async selectPwFile() {
+			let res = await selectFile();
+			if (res.canceled) return;
+			this.pwFile = res.filePaths[0];
+			console.log('select result', res);
+		},
 		async tryLoadRepo() {
 			let profile: UserProfile = this.profile!;
-			let pw = this.password || profile.getSecret()
+			let authEnv = {};
+			if (this.password || profile.getSecret()) {
+				authEnv["RESTIC_PASSWORD"] = this.password || profile.getSecret();
+				authEnv["RUSTIC_PASSWORD"] = this.password || profile.getSecret();
+			} else if(this.pwFile) {
+				authEnv["RESTIC_PASSWORD_FILE"] = this.pwFile;
+				authEnv["RUSTIC_PASSWORD_FILE"] = this.pwFile;
+			} else {
+				return false;
+			}
+			// profile.getRepoAuthEnv()
 			let repo = profile.repoPath;
 			let env = profile.getRepoEnv();
-			if (!pw || !repo || !profile) return false;
+			if (!repo || !profile) return false;
 			this.working = true;
 			try {
-				let res = await Repo.getSnapshots(repo, pw, env);
+				let res = await Repo.getSnapshots(repo, env, authEnv);
 				// await this.profile!.setPathsFromSnapshots(res)
 				this.canAccess = true;
 			} catch (e: any) {
@@ -102,6 +120,10 @@ export default defineComponent({
 				v-model="password"
 				style="width: 220px"
 			/>
+		</el-form-item>
+		<el-form-item label="Repo Password File">
+			<el-button @click="selectPwFile" >Select a file containing the repository password</el-button>
+			<el-alert :title="'Selected: '+pwFile" type="success" />
 		</el-form-item>
 		<el-button @click="savePassword">Okay</el-button>
 	</el-card>
