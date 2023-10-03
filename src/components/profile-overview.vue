@@ -228,7 +228,7 @@ export default defineComponent({
 						type: 'error'
 					})
 				} else {
-					await Repo.unlock(this.profile.repoPath, this.profile.getSecret())
+					await Repo.unlock(this.profile.repoPath, this.profile.getRepoAuthEnv())
 					ElMessage({
 						message: 'Successfully unlocked Repository',
 						type: 'success'

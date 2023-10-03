@@ -14,7 +14,7 @@ export default class RusticBackend extends BaseBackend {
 		return 'rustic';
 	}
 
-	public async getSnapshots(repoDir: string, password: string, repoEnv: Record<string, string>): Promise<Snapshot[]> {
+	public async getSnapshots(repoDir: string, repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>): Promise<Snapshot[]> {
 		let res = await this.exec([
 			'snapshots',
 			`-r=${repoDir}`,
@@ -22,13 +22,13 @@ export default class RusticBackend extends BaseBackend {
 		], {
 			...this.getProcessEnv(),
 			...repoEnv,
-			RUSTIC_PASSWORD: password
+			...repoAuthEnv
 		});
 		console.log('snapshots output', res);
 		return res.stdout ? JSON.parse(res.stdout) : []
 	}
 
-	public async initRepo(repoDir: string, password: string, repoEnv: Record<string, string>) {
+	public async initRepo(repoDir: string, repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>) {
 		let res = await this.exec([
 			'init',
 			'--json',
@@ -36,7 +36,7 @@ export default class RusticBackend extends BaseBackend {
 		], {
 			...this.getProcessEnv(),
 			...repoEnv,
-			RUSTIC_PASSWORD: password
+			...repoAuthEnv
 		})
 		return res.stdout;
 	}
@@ -49,7 +49,7 @@ export default class RusticBackend extends BaseBackend {
 		], {
 			...this.getProcessEnv(),
 			...profile.getRepoEnv(),
-			RUSTIC_PASSWORD: profile.getSecret()
+			...profile.getRepoAuthEnv(),
 		})
 		console.log('stats output', res);
 		let stats = JSON.parse(res.stdout)
@@ -88,7 +88,7 @@ export default class RusticBackend extends BaseBackend {
 			let process = new Process(this.getFullBinPath(), params, {
 				...this.getProcessEnv(),
 				...profile.getRepoEnv(),
-				RUSTIC_PASSWORD: profile.getSecret()
+				...profile.getRepoAuthEnv(),
 			}, info)
 			processes.push(process);
 		}
@@ -103,13 +103,11 @@ export default class RusticBackend extends BaseBackend {
 		return batch;
 	}
 
-	public async unlock(repoDir: string, password: string) {
+	public async unlock(repoDir: string, repoAuthEnv: Record<string, string>): Promise<void> {
 		await this.exec([
 			'unlock',
 			`-r=${repoDir}`
-		], {
-			RUSTIC_PASSWORD: password
-		})
+		], repoAuthEnv)
 	}
 
 	public async forget(profile: UserProfile, settings: Partial<PruneSettings>, dryRun: boolean, pathInfo?: BackupInfo[] | undefined, snapshotId?: string | undefined): Promise<ForgetResultOne[]> {
@@ -140,7 +138,7 @@ export default class RusticBackend extends BaseBackend {
 		let res = await this.exec(params, {
 			...this.getProcessEnv(),
 			...profile.getRepoEnv(),
-			RUSTIC_PASSWORD: profile.getSecret()
+			...profile.getRepoAuthEnv(),
 		});
 		console.log('forget output', res);
 		if (!res.stdout) {
@@ -166,7 +164,7 @@ export default class RusticBackend extends BaseBackend {
 		let process = new Process(this.getFullBinPath(), params, {
 			...this.getProcessEnv(),
 			...profile.getRepoEnv(),
-			RUSTIC_PASSWORD: profile.getSecret()
+			...profile.getRepoAuthEnv(),
 		}, { path })
 		process.start();
 

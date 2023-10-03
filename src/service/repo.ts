@@ -15,12 +15,12 @@ export function getBinFile(): string {
 	return repo.getBinFile();
 }
 
-export async function assertRepoExists(repoDir: string, password: string, repoEnv: Record<string, string>): Promise<Snapshot[]> {
-	return repo.assertRepoExists(repoDir, password, repoEnv);
+export async function assertRepoExists(repoDir: string, repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>): Promise<Snapshot[]> {
+	return repo.assertRepoExists(repoDir, repoEnv, repoAuthEnv);
 }
 
-export async function initRepo(repoDir: string, password: string, repoEnv: Record<string, string>) {
-	return repo.initRepo(repoDir, password, repoEnv);
+export async function initRepo(repoDir: string, repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>) {
+	return repo.initRepo(repoDir, repoEnv, repoAuthEnv);
 }
 
 export async function stats(profile: UserProfile): Promise<StatsResult> {
@@ -47,16 +47,16 @@ export async function checkForRunningProcess() {
 	return repo.checkForRunningProcess()
 }
 
-export async function unlock(repoDir: string, password: string) {
-	return repo.unlock(repoDir, password)
+export async function unlock(repoDir: string, repoAuthEnv: Record<string, string>) {
+	return repo.unlock(repoDir, repoAuthEnv)
 }
 
 export async function forget(profile: UserProfile, settings: Partial<PruneSettings>, dryRun: boolean, pathInfo?: BackupInfo[], snapshotId?: string): Promise<ForgetResultOne[]> {
 	return repo.forget(profile, settings, dryRun, pathInfo, snapshotId)
 }
 
-export async function getSnapshots(repoDir: string, password: string, repoEnv: Record<string, string>): Promise<Snapshot[]> {
-	return repo.getSnapshots(repoDir, password, repoEnv)
+export async function getSnapshots(repoDir: string, repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>): Promise<Snapshot[]> {
+	return repo.getSnapshots(repoDir, repoEnv, repoAuthEnv)
 }
 
 export async function mount(profile: UserProfile, path: string): Promise<Process> {

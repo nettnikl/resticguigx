@@ -69,7 +69,7 @@ export default defineComponent({
 					repoDir = this.formData.repoRaw;
 					repoEnv = this.getEnvFromText(this.formData.repoEnv);
 				}
-				let snapshots = await Repo.assertRepoExists(repoDir, this.formData.password, repoEnv);
+				let snapshots = await Repo.assertRepoExists(repoDir, repoEnv, {RUSTIC_PASSWORD: this.formData.password});
 				let model = await createProfile(this.formData.newName);
 				model.repoPath = repoDir;
 				model.passwordStrategy = this.formData.passStrat;

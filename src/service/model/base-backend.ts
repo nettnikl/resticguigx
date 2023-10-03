@@ -22,8 +22,11 @@ export default abstract class BaseBackend {
 		return Path.join(os.tmpdir(), 'restic-mount-'+Date.now());
 	}
 
-	protected getProcessEnv() {
-		return process.env;
+	protected getProcessEnv(): Record<string, string> {
+		return {
+			...process.env,
+			"": "",
+		};
 	}
 
 	public hasRunningProcess(): boolean {
@@ -67,25 +70,25 @@ export default abstract class BaseBackend {
 		})
 	}
 
-	public async assertRepoExists(repoDir: string, password: string, repoEnv: Record<string, string>): Promise<Snapshot[]> {
+	public async assertRepoExists(repoDir: string, repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>): Promise<Snapshot[]> {
 		try {
-			let res = await this.getSnapshots(repoDir, password, repoEnv);
+			let res = await this.getSnapshots(repoDir, repoEnv, repoAuthEnv);
 			return res;
 		} catch (e) {
-			await this.initRepo(repoDir, password, repoEnv);
+			await this.initRepo(repoDir, repoEnv, repoAuthEnv);
 			return []
 		}
 	}
 
-	public abstract getSnapshots(repoDir: string, password: string, repoEnv: Record<string, string>): Promise<Snapshot[]>
+	public abstract getSnapshots(repoDir: string, repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>): Promise<Snapshot[]>
 
-	public abstract initRepo(repoDir: string, password: string, repoEnv: Record<string, string>)
+	public abstract initRepo(repoDir: string, repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>)
 
 	public abstract stats(profile: UserProfile): Promise<StatsResult>
 
 	public abstract backup(profile: UserProfile, paths: BackupInfo[]): Promise<BatchProcess>
 
-	public abstract unlock(repoDir: string, password: string): Promise<void>
+	public abstract unlock(repoDir: string, repoAuthEnv: Record<string, string>): Promise<void>
 
 	public abstract forget(profile: UserProfile, settings: Partial<PruneSettings>, dryRun: boolean, pathInfo?: BackupInfo[], snapshotId?: string): Promise<ForgetResultOne[]>
 

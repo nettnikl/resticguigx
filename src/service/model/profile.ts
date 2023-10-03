@@ -115,6 +115,12 @@ export default class UserProfile {
 		return this.repoEnv || {};
 	}
 
+	getRepoAuthEnv(): Record<string, string> {
+		return {
+			RUSTIC_PASSWORD: this.getSecret()
+		};
+	}
+
 	getRepoPath(): string {
 		return this.repoPath;
 	}
