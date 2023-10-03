@@ -1,6 +1,6 @@
-import { app, BrowserWindow, shell, ipcMain, dialog, Menu, MenuItem } from 'electron'
-import { release } from 'node:os'
-import { join } from 'node:path'
+import {app, BrowserWindow, dialog, ipcMain, Menu, MenuItem, shell} from 'electron'
+import {release} from 'node:os'
+import {join} from 'node:path'
 
 process.env.DIST_ELECTRON = join(__dirname, '..')
 process.env.DIST = join(process.env.DIST_ELECTRON, '../dist')
@@ -157,6 +157,14 @@ ipcMain.handle('select-dirs', async (event, arg) => {
 	})
 	// console.log('directories selected', result.filePaths)
 	return result;
+})
+
+ipcMain.handle('open-file', async (event, arg) => {
+	const properties: ("openDirectory" | "openFile" | "multiSelections" | "showHiddenFiles" | "createDirectory" | "promptToCreate" | "noResolveAliases" | "treatPackageAsDirectory" | "dontAddToRecent")[]
+		= ['openFile'];
+	return await dialog.showOpenDialog(win, {
+		properties
+	});
 })
 
 ipcMain.handle('read-user-data', async (event, fileName) => {

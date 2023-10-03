@@ -1,4 +1,4 @@
-import { ipcRenderer } from 'electron'
+import {ipcRenderer} from 'electron'
 import fs from 'node:fs/promises'
 import psaux from 'psaux'
 import router from '../router/index'
@@ -12,6 +12,10 @@ ipcRenderer.on('navigate', (_event, path) => {
 export async function selectDirectory(multiple?: boolean) {
 	let result = await ipcRenderer.invoke('select-dirs', { multiple })
 	return result;
+}
+
+export async function selectFile() {
+	return await ipcRenderer.invoke('open-file');
 }
 
 let storageDir = ''
