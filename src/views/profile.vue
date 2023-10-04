@@ -54,6 +54,7 @@ export default defineComponent({
 			await this.tryLoadRepo();
 			if (this.canAccess) {
 				this.profile!.setSecret(this.password);
+				this.profile!.pwFile = this.pwFile;
 				this.password = '';
 			}
 		},
@@ -66,12 +67,12 @@ export default defineComponent({
 		async tryLoadRepo() {
 			let profile: UserProfile = this.profile!;
 			let authEnv = {};
-			if (this.password || profile.getSecret()) {
-				authEnv["RESTIC_PASSWORD"] = this.password || profile.getSecret();
-				authEnv["RUSTIC_PASSWORD"] = this.password || profile.getSecret();
-			} else if(this.pwFile) {
+			if (this.pwFile) {
 				authEnv["RESTIC_PASSWORD_FILE"] = this.pwFile;
 				authEnv["RUSTIC_PASSWORD_FILE"] = this.pwFile;
+			} else if (this.password || profile.getSecret()) {
+				authEnv["RESTIC_PASSWORD"] = this.password || profile.getSecret();
+				authEnv["RUSTIC_PASSWORD"] = this.password || profile.getSecret();
 			} else {
 				return false;
 			}
@@ -81,7 +82,7 @@ export default defineComponent({
 			if (!repo || !profile) return false;
 			this.working = true;
 			try {
-				let res = await Repo.getSnapshots(repo, env, authEnv);
+				let res = await Repo.getSnapshots(repo, profile.repoParams, env, authEnv);
 				// await this.profile!.setPathsFromSnapshots(res)
 				this.canAccess = true;
 			} catch (e: any) {
