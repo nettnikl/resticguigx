@@ -131,6 +131,9 @@ export default defineComponent({
 			}
 			this.newSources = []
 		},
+		removeSourceDir(tag: BackupInfo) {
+			this.formData.backupDirs.splice(this.formData.backupDirs.indexOf(tag), 1)
+		},
 		async selectSourceDir() {
 			let res = await selectDirectory(true);
 			if (res.canceled) return;
@@ -144,12 +147,12 @@ export default defineComponent({
 		},
 	}
 
-	
+
 })
 </script>
 
 <template>
-	<el-form 
+	<el-form
 		label-width="200px"
 		:rules="formRules"
 		:model="formData"
@@ -175,12 +178,13 @@ export default defineComponent({
 				</template>
 			</el-input>
 			<el-alert
-				:title="backupDir.path"
-				type="success"
-				@close="formData.backupDirs.splice(index, 1)"
+				:key="backupDir"
+				closable
+				@close="removeSourceDir(backupDir)"
 				truncated
-				v-for="(backupDir, index) in formData.backupDirs"
+				v-for="backupDir in formData.backupDirs"
 			>
+				{{ backupDir.path }}
 			</el-alert>
 			<el-alert type="info" show-icon :closable="false">
 				{{ formData.backupDirs.length }} folders selected. You can add more later.
