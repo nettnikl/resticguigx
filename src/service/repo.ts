@@ -15,12 +15,12 @@ export function getBinFile(): string {
 	return repo.getBinFile();
 }
 
-export async function assertRepoExists(repoDir: string, repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>): Promise<Snapshot[]> {
-	return repo.assertRepoExists(repoDir, repoEnv, repoAuthEnv);
+export async function assertRepoExists(repoDir: string, repoParams: string[], repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>): Promise<Snapshot[]> {
+	return repo.assertRepoExists(repoDir, repoParams, repoEnv, repoAuthEnv);
 }
 
-export async function initRepo(repoDir: string, repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>) {
-	return repo.initRepo(repoDir, repoEnv, repoAuthEnv);
+export async function initRepo(repoDir: string, repoParams: string[], repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>) {
+	return repo.initRepo(repoDir, repoParams, repoEnv, repoAuthEnv);
 }
 
 export async function stats(profile: UserProfile): Promise<StatsResult> {
@@ -55,8 +55,8 @@ export async function forget(profile: UserProfile, settings: Partial<PruneSettin
 	return repo.forget(profile, settings, dryRun, pathInfo, snapshotId)
 }
 
-export async function getSnapshots(repoDir: string, repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>): Promise<Snapshot[]> {
-	return repo.getSnapshots(repoDir, repoEnv, repoAuthEnv)
+export async function getSnapshots(repoDir: string, repoParams: string[], repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>): Promise<Snapshot[]> {
+	return repo.getSnapshots(repoDir, repoParams, repoEnv, repoAuthEnv)
 }
 
 export async function mount(profile: UserProfile, path: string): Promise<Process> {

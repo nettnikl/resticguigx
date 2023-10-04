@@ -14,11 +14,12 @@ export default class ResticBackend extends BaseBackend {
 		return 'restic';
 	}
 
-	public async getSnapshots(repoDir: string, repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>): Promise<Snapshot[]> {
+	public async getSnapshots(repoDir: string, repoParams: string[], repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>): Promise<Snapshot[]> {
 		let res = await this.exec([
 			'snapshots',
 			`-r=${repoDir}`,
-			'--json'
+			'--json',
+			...repoParams
 		], {
 			...this.getProcessEnv(),
 			...repoEnv,
@@ -28,11 +29,12 @@ export default class ResticBackend extends BaseBackend {
 		return res.stdout ? JSON.parse(res.stdout) : []
 	}
 
-	public async initRepo(repoDir: string, repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>) {
+	public async initRepo(repoDir: string, repoParams: string[], repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>) {
 		let res = await this.exec([
 			'init',
 			'--json',
-			`-r=${repoDir}`
+			`-r=${repoDir}`,
+			...repoParams
 		], {
 			...this.getProcessEnv(),
 			...repoEnv,
@@ -45,7 +47,8 @@ export default class ResticBackend extends BaseBackend {
 		let res = await this.exec([
 			'stats',
 			'--json',
-			`-r=${profile.getRepoPath()}`
+			`-r=${profile.getRepoPath()}`,
+			...profile.repoParams
 		], {
 			...this.getProcessEnv(),
 			...profile.getRepoEnv(),
@@ -125,7 +128,8 @@ export default class ResticBackend extends BaseBackend {
 		let params = [
 			'--json',
 			'forget',
-			`-r=${profile.repoPath}`
+			`-r=${profile.repoPath}`,
+			...profile.repoParams
 		];
 		params.push(dryRun ? '--dry-run' : '--prune');
 		let keep: string[] = [];
@@ -179,7 +183,8 @@ export default class ResticBackend extends BaseBackend {
 				'mount',
 				`--tag=${path}`,
 				`-r=${profile.repoPath}`,
-				mountPath
+				mountPath,
+				...profile.repoParams
 			], {
 				...this.getProcessEnv(),
 				...profile.getRepoEnv(),
@@ -209,7 +214,8 @@ export default class ResticBackend extends BaseBackend {
 			`--tag=${path}`,
 			`-r=${profile.repoPath}`,
 			`--target=${targetPath}`,
-			'latest'
+			'latest',
+			...profile.repoParams
 		]
 		let process = new Process(this.getFullBinPath(), params, {
 			...this.getProcessEnv(),

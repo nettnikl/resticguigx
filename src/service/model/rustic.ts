@@ -14,11 +14,12 @@ export default class RusticBackend extends BaseBackend {
 		return 'rustic';
 	}
 
-	public async getSnapshots(repoDir: string, repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>): Promise<Snapshot[]> {
+	public async getSnapshots(repoDir: string, repoParams: string[], repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>): Promise<Snapshot[]> {
 		let res = await this.exec([
 			'snapshots',
 			`-r=${repoDir}`,
-			'--json'
+			'--json',
+			...repoParams
 		], {
 			...this.getProcessEnv(),
 			...repoEnv,
@@ -28,11 +29,12 @@ export default class RusticBackend extends BaseBackend {
 		return res.stdout ? JSON.parse(res.stdout) : []
 	}
 
-	public async initRepo(repoDir: string, repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>) {
+	public async initRepo(repoDir: string, repoParams: string[], repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>) {
 		let res = await this.exec([
 			'init',
 			'--json',
-			`-r=${repoDir}`
+			`-r=${repoDir}`,
+			...repoParams
 		], {
 			...this.getProcessEnv(),
 			...repoEnv,
@@ -45,7 +47,8 @@ export default class RusticBackend extends BaseBackend {
 		let res = await this.exec([
 			'repoinfo',
 			'--json',
-			`-r=${profile.getRepoPath()}`
+			`-r=${profile.getRepoPath()}`,
+			...profile.repoParams
 		], {
 			...this.getProcessEnv(),
 			...profile.getRepoEnv(),
@@ -83,7 +86,8 @@ export default class RusticBackend extends BaseBackend {
 				'--exclude-caches',
 				`--tag=${info.path}`,
 				`-r=${profile.repoPath}`,
-				`${info.path}`
+				`${info.path}`,
+				...profile.repoParams
 			];
 			let process = new Process(this.getFullBinPath(), params, {
 				...this.getProcessEnv(),
@@ -114,7 +118,8 @@ export default class RusticBackend extends BaseBackend {
 		let params = [
 			'forget',
 			'--json',
-			`-r=${profile.repoPath}`
+			`-r=${profile.repoPath}`,
+			...profile.repoParams
 		];
 		params.push(dryRun ? '--dry-run' : '--prune');
 		let keep: string[] = [];
@@ -159,7 +164,8 @@ export default class RusticBackend extends BaseBackend {
 			`--filter-tags=${path}`,
 			`-r=${profile.repoPath}`,
 			'latest',
-			`${targetPath}`
+			`${targetPath}`,
+			...profile.repoParams
 		]
 		let process = new Process(this.getFullBinPath(), params, {
 			...this.getProcessEnv(),

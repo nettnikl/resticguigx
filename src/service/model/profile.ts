@@ -45,6 +45,7 @@ export default class UserProfile {
 	profileName: string
 	repoPath: string = ''
 	repoEnv: Record<string, string> = {}
+	repoParams: string[] = []
 	repoStats: Partial<StatsResult> = {}
 	repoInfo: Partial<RepoInfo> = {}
 	backupDirs: BackupInfo[] = []

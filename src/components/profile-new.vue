@@ -22,6 +22,7 @@ export default defineComponent({
 			repoType: 'default',
 			repoRaw: '',
 			repoEnv: '',
+			repoParams: [] as string[],
 			backupDirs: [] as BackupInfo[],
 			password: '',
 			pwFile: '',
@@ -68,13 +69,15 @@ export default defineComponent({
 
 				let repoDir = '';
 				let repoEnv = {};
+				let repoParams = [] as string[];
 				if (this.formData.repoType === 'default') {
 					repoDir = this.formData.repoSelect;
 				} else {
 					repoDir = this.formData.repoRaw;
 					repoEnv = this.getEnvFromText(this.formData.repoEnv);
+					repoParams = this.formData.repoParams;
 				}
-				let snapshots = await Repo.assertRepoExists(repoDir, repoEnv, {
+				let snapshots = await Repo.assertRepoExists(repoDir, repoParams, repoEnv, {
 					RESTIC_PASSWORD: this.formData.password,
 					RESTIC_PASSWORD_FILE: this.formData.pwFile,
 					RUSTIC_PASSWORD: this.formData.password,
@@ -86,6 +89,7 @@ export default defineComponent({
 				model.setSecret(this.formData.password);
 				model.pwFile = this.formData.pwFile;
 				model.repoEnv = repoEnv;
+				model.repoParams = repoParams;
 				model.backupDirs = this.formData.backupDirs;
 				await model.setPathsFromSnapshots(snapshots);
 				model.pruneSettings = {
@@ -260,11 +264,21 @@ export default defineComponent({
 		<el-form-item label="Repository URL" v-show="formData.repoType === 'expert'">
 			<el-input v-model="formData.repoRaw" placeholder="rest:https://example.org:8000/"  />
 		</el-form-item>
-		<el-form-item label="Repository ENV Vars" v-show="formData.repoType === 'expert'">
+		<el-form-item label="Repository Extra ENV Vars" v-show="formData.repoType === 'expert'">
 			<el-input v-model="formData.repoEnv" type="textarea" cols="50" rows="2" placeholder="AWS_ACCESS_KEY_ID=..."  />
 			<el-alert type="info" show-icon :closable="false">
 				One variable per line. Vars are also inherited from the GUI.
 			</el-alert>
+		</el-form-item>
+		<el-form-item label="Repository Extra CMD Params" v-show="formData.repoType === 'expert'">
+			<el-input
+				:model-value="formData.repoParams.join('\n')"
+				@update:model-value="newValue => formData.repoParams = newValue.split('\n')"
+				type="textarea"
+				cols="50"
+				rows="2"
+				placeholder="--compression
+max" />
 		</el-form-item>
 		<el-divider></el-divider>
 		<el-button @click="create" :disabled="!canCreate" v-loading="working">
