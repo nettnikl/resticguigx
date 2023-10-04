@@ -234,7 +234,12 @@ export default defineComponent({
 		</el-form-item>
 		<el-form-item label="Repository Target" v-show="formData.repoType === 'default'">
 			<el-button @click="selectDir" >Select an empty Folder or existing repository</el-button>
-			<el-alert :title="'Selected: '+formData.repoSelect" type="success" v-show="formData.repoSelect.length > 0" />
+			<el-alert
+				:title="'Selected: '+formData.repoSelect"
+				type="success"
+				v-show="formData.repoSelect.length > 0"
+				@close="formData.repoSelect = '';"
+			/>
 		</el-form-item>
 		<el-form-item label="Repository URL" v-show="formData.repoType === 'expert'">
 			<el-input v-model="formData.repoRaw" placeholder="rest:https://example.org:8000/"  />
