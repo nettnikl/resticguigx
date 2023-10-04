@@ -84,6 +84,7 @@ export default defineComponent({
 				model.repoPath = repoDir;
 				model.passwordStrategy = this.formData.passStrat;
 				model.setSecret(this.formData.password);
+				model.pwFile = this.formData.pwFile;
 				model.repoEnv = repoEnv;
 				model.backupDirs = this.formData.backupDirs;
 				await model.setPathsFromSnapshots(snapshots);

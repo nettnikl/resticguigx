@@ -54,6 +54,7 @@ export default class UserProfile {
 	passwordStrategy = UserProfile.PW_STRAT_PROFILE
 	storedSecret: string = ''
 	_tempSecret: string = ''
+	pwFile?: string;
 
 	constructor(profileName: string) {
 		this.profileName = profileName
@@ -116,6 +117,12 @@ export default class UserProfile {
 	}
 
 	getRepoAuthEnv(): Record<string, string> {
+		if (this.pwFile) {
+			return {
+				RESTIC_PASSWORD_FILE: this.pwFile,
+				RUSTIC_PASSWORD_FILE: this.pwFile
+			}
+		}
 		return {
 			RESTIC_PASSWORD: this.getSecret(),
 			RUSTIC_PASSWORD: this.getSecret()
