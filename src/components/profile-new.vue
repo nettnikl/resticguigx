@@ -161,8 +161,8 @@ export default defineComponent({
 		</el-form-item>
 		<el-form-item label="Sources">
 			<el-input
-				:value="newSources.join(';')"
-				@input="newSources = $event.target.value.split(';')">
+				:model-value="newSources.join(';')"
+				@update:model-value="newValue => newSources = newValue.split(';')">
 				<template #append>
 					<el-button @click="selectSourceDir">
 						Select Folder
