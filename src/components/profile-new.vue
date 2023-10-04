@@ -9,7 +9,6 @@ import backupNewVue from './backup-new.vue';
 export default defineComponent({
 	name: 'ProfilNew',
 
-
 	components: {
 		backupNewVue
 	},
@@ -174,12 +173,15 @@ export default defineComponent({
 						icon="CirclePlusFilled">
 					</el-button>
 				</template>
-				<template #append>
-					<el-button @click="selectSourceDir">
-						Select Folder
-					</el-button>
-				</template>
 			</el-input>
+			<el-alert
+				:title="backupDir.path"
+				type="success"
+				@close="formData.backupDirs.splice(index, 1)"
+				truncated
+				v-for="(backupDir, index) in formData.backupDirs"
+			>
+			</el-alert>
 			<el-alert type="info" show-icon :closable="false">
 				{{ formData.backupDirs.length }} folders selected. You can add more later.
 			</el-alert>
