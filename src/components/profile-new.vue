@@ -176,13 +176,15 @@ export default defineComponent({
 				v-model="formData.pwFile"
 				v-if="passSrc === 'file'"
 				placeholder="/etc/backup-password.txt"
-			/>
-			<el-button
-				@click="selectPwFile"
-				icon="CirclePlusFilled"
-				v-if="passSrc === 'file'">
-				Select Password File
-			</el-button>
+			>
+				<template #append>
+					<el-button
+						@click="selectPwFile"
+						v-if="passSrc === 'file'">
+						Browse...
+					</el-button>
+				</template>
+			</el-input>
 			<el-alert type="info" show-icon :closable="false">
 				Without this password, all data will be lost
 			</el-alert>
