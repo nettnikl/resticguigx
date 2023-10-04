@@ -160,7 +160,14 @@ export default defineComponent({
 			<el-input v-model="formData.newName" placeholder="Name" />
 		</el-form-item>
 		<el-form-item label="Sources">
-			<el-input v-model="newSources">
+			<el-input
+				:value="newSources.join(';')"
+				@input="newSources = $event.target.value.split(';')">
+				<template #append>
+					<el-button @click="selectSourceDir">
+						Select Folder
+					</el-button>
+				</template>
 				<template #prepend>
 					<el-button
 						@click="addSourceDir"
