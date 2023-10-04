@@ -110,7 +110,9 @@ export default defineComponent({
 			let lines = text.split('\n');
 			let r = {};
 			for (let line of lines) {
-				let [key, value] = line.split('=')
+				let parts = line.split('=')
+				let key = parts[0]
+				let value = parts.slice(1).join('_')
 				if (key && value) {
 					r[key] = value
 				}
