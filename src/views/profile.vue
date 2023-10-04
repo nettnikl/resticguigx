@@ -66,18 +66,9 @@ export default defineComponent({
 		},
 		async tryLoadRepo() {
 			let profile: UserProfile = this.profile!;
-			let authEnv = {};
-			if (this.pwFile) {
-				authEnv["RESTIC_PASSWORD_FILE"] = this.pwFile;
-				authEnv["RUSTIC_PASSWORD_FILE"] = this.pwFile;
-			} else if (this.password || profile.getSecret()) {
-				authEnv["RESTIC_PASSWORD"] = this.password || profile.getSecret();
-				authEnv["RUSTIC_PASSWORD"] = this.password || profile.getSecret();
-			} else {
-				return false;
-			}
-			// profile.getRepoAuthEnv()
+			profile._tempSecret = this.password;
 			let repo = profile.repoPath;
+			let authEnv = this.profile?.getRepoAuthEnv();
 			let env = profile.getRepoEnv();
 			if (!repo || !profile) return false;
 			this.working = true;

@@ -76,7 +76,7 @@ export default class UserProfile {
 	}
 
 	hasSecret(): boolean {
-		if (this._tempSecret || this.storedSecret) return true;
+		if (this._tempSecret || this.storedSecret || this.pwFile) return true;
 		return false;
 	}
 
