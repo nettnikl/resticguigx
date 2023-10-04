@@ -212,6 +212,12 @@ export default defineComponent({
 				<el-radio label="profile" size="large">Store in Profile</el-radio>
 			</el-radio-group>
 		</el-form-item>
+		<el-form-item label="Password Strategy" v-if="passSrc === 'file'">
+			<el-radio-group model-value="profile">
+				<el-radio label="ask" size="large" disabled>Ask everytime</el-radio>
+				<el-radio label="profile" size="large" >Store in Profile</el-radio>
+			</el-radio-group>
+		</el-form-item>
 		<el-divider></el-divider>
 		<el-form-item label="Repository Type">
 			<el-select v-model="formData.repoType">
