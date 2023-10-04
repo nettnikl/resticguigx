@@ -28,6 +28,7 @@ export default defineComponent({
 			pwFile: '',
 			passStrat: UserProfile.PW_STRAT_ASK
 		},
+		newSources: [] as string[],
 		passSrc: '',
 		working: false,
 		error: '',
@@ -125,12 +126,16 @@ export default defineComponent({
 				this.formData.backupDirs.push({ path })
 			}
 		},
+		addSourceDir() {
+			for (let path of this.newSources) {
+				this.added(path);
+			}
+			this.newSources = []
+		},
 		async selectSourceDir() {
 			let res = await selectDirectory(true);
 			if (res.canceled) return;
-			for (let path of res.filePaths) {
-				this.added(path);
-			}
+			this.newSources = res.filePaths;
 		},
 		async selectPwFile() {
 			let res = await selectFile();
@@ -155,7 +160,19 @@ export default defineComponent({
 			<el-input v-model="formData.newName" placeholder="Name" />
 		</el-form-item>
 		<el-form-item label="Sources">
-			<el-button @click="selectSourceDir" icon="CirclePlusFilled">Select Folder</el-button>
+			<el-input v-model="newSources">
+				<template #prepend>
+					<el-button
+						@click="addSourceDir"
+						icon="CirclePlusFilled">
+					</el-button>
+				</template>
+				<template #append>
+					<el-button @click="selectSourceDir">
+						Select Folder
+					</el-button>
+				</template>
+			</el-input>
 			<el-alert type="info" show-icon :closable="false">
 				{{ formData.backupDirs.length }} folders selected. You can add more later.
 			</el-alert>
