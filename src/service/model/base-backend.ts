@@ -70,19 +70,19 @@ export default abstract class BaseBackend {
 		})
 	}
 
-	public async assertRepoExists(repoDir: string, repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>): Promise<Snapshot[]> {
+	public async assertRepoExists(repoDir: string, repoParams: string[], repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>): Promise<Snapshot[]> {
 		try {
-			let res = await this.getSnapshots(repoDir, repoEnv, repoAuthEnv);
+			let res = await this.getSnapshots(repoDir, repoParams, repoEnv, repoAuthEnv);
 			return res;
 		} catch (e) {
-			await this.initRepo(repoDir, repoEnv, repoAuthEnv);
+			await this.initRepo(repoDir, repoParams, repoEnv, repoAuthEnv);
 			return []
 		}
 	}
 
-	public abstract getSnapshots(repoDir: string, repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>): Promise<Snapshot[]>
+	public abstract getSnapshots(repoDir: string, repoParams: string[], repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>): Promise<Snapshot[]>
 
-	public abstract initRepo(repoDir: string, repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>)
+	public abstract initRepo(repoDir: string, repoParams: string[], repoEnv: Record<string, string>, repoAuthEnv: Record<string, string>)
 
 	public abstract stats(profile: UserProfile): Promise<StatsResult>
 
