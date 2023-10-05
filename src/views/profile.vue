@@ -68,7 +68,11 @@ export default defineComponent({
 				this.canAccess = true;
 			} catch (e: any) {
 				this.canAccess = false;
-				this.error = 'unable to load repo at "'+this.profile!.getRepoPath()+'" with given password because: '+e.message
+				if (e.message.includes("Fatal: wrong password or no key found")){
+					this.error = 'Wrong password!'
+				} else {
+					this.error = 'Unable to load repo at "' + this.profile!.getRepoPath() + '" with given password because: ' + e.message
+				}
 			} finally {
 				this.working = false;
 			}
